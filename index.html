@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Furrow — Farm Ledger</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#eef2ea;--panel:#fbfcf8;--ink:#17301f;--mute:#5d6f60;--line:#cfd9c9;--gain:#2e7d4f;--loss:#b3412f;--gold:#e0a800}
+@media(prefers-color-scheme:dark){:root{--bg:#101a13;--panel:#17251b;--ink:#e8efe2;--mute:#9fb2a2;--line:#2c4032;--gain:#5cc58a;--loss:#e5806c;--gold:#f0c24a}}
+*,*:before,*:after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "DM Sans",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;margin:0;line-height:1.1}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header b{font:800 26px Fraunces,Georgia,serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:8px}
+button.pri{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+button.sm{padding:4px 10px;font-size:13px}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.hero h1{font-size:clamp(28px,5.5vw,48px);max-width:16em;margin:26px 0 8px}
+.mute,.cap{color:var(--mute)}.cap{font-size:13px}
+.banner{background:var(--gold);color:#17301f;border-radius:12px;padding:14px 18px;margin:18px 0;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.banner button{background:#17301f;color:#fff;border-color:#17301f;font-weight:700}
+.strip{display:flex;gap:4px;height:140px;margin:16px 0 6px}
+.plot{flex:1 1 0;min-width:48px;border:0;border-radius:6px;padding:8px;color:#fff;text-align:left;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background-image:repeating-linear-gradient(100deg,transparent 0 9px,rgba(0,0,0,.13) 9px 11px)}
+.plot span,.plot strong{font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.5)}.plot.on{outline:3px solid var(--gold);outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0 22px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}.kpi small{display:block;color:var(--mute)}
+.kpi b{font:800 22px Fraunces,Georgia,serif}
+.pos{color:var(--gain)}.neg{color:var(--loss)}
+section,.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:20px}
+section h2{font-size:22px;margin-bottom:10px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:700px;font-size:14px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:var(--mute);font-weight:500}.n{text-align:right}
+form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+label{display:grid;gap:4px;font-size:13px;color:var(--mute)}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.fa{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
+.auth{max-width:420px;margin:8vh auto 0}.auth form{grid-template-columns:1fr}
+.msg{min-height:1.4em;font-size:14px}.msg.err{color:var(--loss)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:800px){.two{grid-template-columns:1fr}}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin:6px 0 0}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.cb{display:grid;grid-template-columns:110px 1fr 90px;gap:8px;align-items:center;font-size:14px;margin:6px 0}.cb i{display:block;height:10px;border-radius:5px;background:var(--gold)}
+.note{border-left:4px solid var(--gold);padding-left:12px;margin:8px 0}
+</style></head><body><main id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+var sb=supabase.createClient("https://fuhgjptdmvtbuaopglqg.supabase.co","sb_publishable_NqRaoe4OjdVLxjZZin3SZA_yuRwvKwo");
+var S={user:null,farms:[],seasons:[],exp:[],sel:null,selSeason:null,form:null,msg:"",err:false,loaded:false,skip:false},A=document.getElementById("app");
+var CATS=["Seed","Labour","Fertiliser","Pesticide","Transport","Water","Equipment","Other"],COL=["#2e7d4f","#e0a800","#3b7ea1","#b3412f","#7a5aa6","#6b4f2a"];
+function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function num(x){return Number(x)||0}
+function k(n){return"KES "+Math.round(num(n)).toLocaleString("en-KE")}
+function kk(n){return(n>=0?"+":"")+Math.round(num(n)/1000)+"k"}
+function cl(n){return n>=0?"pos":"neg"}
+function sum(a,f){return a.reduce(function(s,x){return s+num(f(x))},0)}
+function fld(n,v){return'<label>'+n+v+'</label>'}
+// ---------- sample data (lives only in this file, never in the database) ----------
+var DEMO=(function(){var raw=[["Riverside Maize","J. Kamau","Nakuru","Chief W. Njoroge",12,[["Long rains 2025","Maize","2025-08-15",240000,150000,520000],["Short rains 2025","Maize","2026-01-20",240000,160000,630000],["Long rains 2026","Maize","2026-08-12",240000,170000,720000]]],
+["Hilltop Tea","J. Kamau","Kericho","Chief P. Kosgei",6,[["Season 1 2026","Tea","2026-03-10",300000,200000,640000],["Season 2 2026","Tea","2026-07-10",300000,220000,740000]]],
+["Dry Plains Sorghum","A. Otieno","Kitui","Chief M. Mutua",20,[["Season 1","Sorghum","2025-09-01",175000,260000,300000],["Season 2","Sorghum","2026-02-01",175000,260000,310000]]]],F=[],SS=[];
+raw.forEach(function(r,i){var id="d"+i,ss=r[5].map(function(s,j){var net=s[5]-s[3]-s[4];return{season_id:id+"s"+j,farm_id:id,label:s[0],crop:s[1],harvest_date:s[2],amount_paid:s[3],amount_spent:s[4],harvest_income:s[5],net_profit:net,roi_percent:net/(s[3]+s[4])*100,itemised_expenses:0}});
+ SS=SS.concat(ss);F.push({farm_id:id,name:r[0],owner_name:r[1],location:r[2],area_chief:r[3],acres:r[4],seasons_recorded:ss.length,total_paid:sum(ss,function(x){return x.amount_paid}),total_spent:sum(ss,function(x){return x.amount_spent}),total_income:sum(ss,function(x){return x.harvest_income}),net_profit:sum(ss,function(x){return x.net_profit})})});
+var ex={d0s0:[["Seed",40000],["Labour",55000],["Fertiliser",35000],["Transport",20000]]};
+Object.keys(ex).forEach(function(id){ex[id]=ex[id].map(function(e,i){return{id:id+i,category:e[0],description:"",amount:e[1],spent_on:"2025-05-01"}});SS.forEach(function(s){if(s.season_id==id)s.itemised_expenses=sum(ex[id],function(e){return e.amount})})});
+return{farms:F,seasons:SS,exp:ex}})();
+// ---------- data ----------
+async function load(){
+ var r=await Promise.all([sb.from("farm_summary").select("*").order("name"),sb.from("season_analysis").select("*").order("harvest_date",{ascending:true,nullsFirst:false})]);
+ if(r[0].error||r[1].error){S.err=true;S.msg=(r[0].error||r[1].error).message}
+ S.farms=r[0].data||[];S.seasons=r[1].data||[];S.loaded=true;if(S.selSeason)await loadExp();render()}
+async function loadExp(){var r=await sb.from("expenses").select("*").eq("season_id",S.selSeason).order("spent_on");S.exp=r.data||[]}
+function isSample(){return S.user&&S.loaded&&!S.skip&&!(S.user.user_metadata&&S.user.user_metadata.sample_seen)&&S.farms.length==0}
+// ---------- charts ----------
+function trunc(t){t=String(t||"");return t.length>13?t.slice(0,12)+"…":t}
+function bars(ss){var W=640,H=230,pl=44,pb=44,pt=16,n=ss.length,mx=Math.max.apply(null,ss.map(function(x){return Math.max(num(x.amount_paid)+num(x.amount_spent),num(x.harvest_income))}).concat([1])),gw=(W-pl-10)/n,bw=Math.min(34,gw/3),b=H-pb;
+ var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Income versus cost for each season" style="width:100%;height:auto">';
+ [0,.5,1].forEach(function(t){var y=pt+(H-pt-pb)*(1-t);s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)"/><text x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+Math.round(mx*t/1000)+'k</text>'});
+ ss.forEach(function(x,i){var c=num(x.amount_paid)+num(x.amount_spent),r=num(x.harvest_income),cx=pl+gw*i+gw/2,ch=(H-pt-pb)*c/mx,rh=(H-pt-pb)*r/mx;
+  s+='<rect x="'+(cx-bw-1)+'" y="'+(b-ch)+'" width="'+bw+'" height="'+ch+'" rx="3" fill="var(--loss)"/><rect x="'+(cx+1)+'" y="'+(b-rh)+'" width="'+bw+'" height="'+rh+'" rx="3" fill="var(--gain)"/>'+
+  '<text x="'+cx+'" y="'+(b+16)+'" text-anchor="middle" font-size="11" fill="var(--ink)">'+esc(trunc(x.label))+'</text><text x="'+cx+'" y="'+(b+31)+'" text-anchor="middle" font-size="11" font-weight="700" fill="var(--'+(x.net_profit>=0?"gain":"loss")+')">'+kk(x.net_profit)+'</text>'});
+ return s+'</svg><div class="leg"><span><i style="background:var(--loss)"></i>Paid + spent</span><span><i style="background:var(--gain)"></i>Harvest income</span><span>Number under each season is net profit</span></div>'}
+function lines(F,SS){var d=SS.filter(function(x){return x.harvest_date});if(d.length<2)return"";
+ var W=640,H=240,pl=44,pr=16,pt=14,pb=28,ts=d.map(function(x){return+new Date(x.harvest_date)}),t0=Math.min.apply(null,ts),t1=Math.max.apply(null,ts),ys=d.map(function(x){return num(x.net_profit)}),lo=Math.min.apply(null,ys.concat([0])),hi=Math.max.apply(null,ys.concat([0]));if(hi==lo)hi=lo+1;
+ var X=function(t){return t1==t0?(pl+W-pr)/2:pl+(W-pl-pr)*(t-t0)/(t1-t0)},Y=function(v){return pt+(H-pt-pb)*(hi-v)/(hi-lo)};
+ var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Net profit over time for each farm" style="width:100%;height:auto">';
+ [lo,0,hi].forEach(function(v){s+='<line x1="'+pl+'" x2="'+W+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"'+(v==0?' stroke-width="2"':'')+'/><text x="'+(pl-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+Math.round(v/1000)+'k</text>'});
+ s+='<text x="'+pl+'" y="'+(H-6)+'" font-size="11" fill="var(--mute)">'+new Date(t0).toISOString().slice(0,7)+'</text><text x="'+(W-pr)+'" y="'+(H-6)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+new Date(t1).toISOString().slice(0,7)+'</text>';
+ var lg="";F.forEach(function(f,i){var p=d.filter(function(x){return x.farm_id==f.farm_id}).sort(function(a,b){return a.harvest_date<b.harvest_date?-1:1});if(!p.length)return;var c=COL[i%COL.length];
+  s+='<polyline fill="none" stroke="'+c+'" stroke-width="2.5" points="'+p.map(function(x){return X(+new Date(x.harvest_date))+","+Y(num(x.net_profit))}).join(" ")+'"/>'+p.map(function(x){return'<circle cx="'+X(+new Date(x.harvest_date))+'" cy="'+Y(num(x.net_profit))+'" r="4" fill="'+c+'"><title>'+esc(f.name+" · "+x.label+" · "+k(x.net_profit))+'</title></circle>'}).join("");
+  lg+='<span><i style="background:'+c+'"></i>'+esc(f.name)+'</span>'});
+ return s+'</svg><div class="leg">'+lg+'</div>'}
+function compare(ss){var d=ss.filter(function(x){return x.harvest_date}).sort(function(a,b){return a.harvest_date<b.harvest_date?-1:1});if(d.length<2)return"";
+ var l=d[d.length-1],p=d[d.length-2],best=d.slice().sort(function(a,b){return b.net_profit-a.net_profit})[0],t="";
+ var ch=num(l.net_profit)-num(p.net_profit);
+ t+='<div class="note"><b>Latest vs previous:</b> '+esc(l.label)+' made '+k(l.net_profit)+', which is <span class="'+cl(ch)+'">'+(ch>=0?"up ":"down ")+k(Math.abs(ch))+'</span> on '+esc(p.label)+'.</div>';
+ t+='<div class="note"><b>Best season so far:</b> '+esc(best.label)+' at '+k(best.net_profit)+' ('+Math.round(num(best.roi_percent))+'% return).</div>';return t}
+// ---------- forms ----------
+function farmForm(d){d=d||{};return'<section><h2>'+(d.id?'Edit farm':'Add farm')+'</h2><form id="ff"><input type="hidden" name="rid" value="'+esc(d.id||"")+'">'+
+ fld("Farm name",'<input name="name" required value="'+esc(d.name)+'">')+fld("Owner",'<input name="owner_name" required value="'+esc(d.owner_name)+'">')+
+ fld("Location",'<input name="location" required value="'+esc(d.location)+'">')+fld("Area chief",'<input name="area_chief" value="'+esc(d.area_chief)+'">')+
+ fld("Acres",'<input name="acres" type="number" min="0" step="0.1" required value="'+esc(d.acres)+'">')+
+ '<div class="fa"><button class="pri" type="submit">Save farm</button><button type="button" data-act="cancel">Cancel</button></div></form></section>'}
+function seasonForm(d){d=d||{};return'<section><h2>'+(d.season_id?'Edit season':'Add season')+'</h2><form id="sf"><input type="hidden" name="rid" value="'+esc(d.season_id||"")+'">'+
+ fld("Season name (e.g. Long rains 2026)",'<input name="label" required value="'+esc(d.label)+'">')+fld("Crop",'<input name="crop" value="'+esc(d.crop)+'">')+
+ fld("Harvest date",'<input name="harvest_date" type="date" value="'+esc(d.harvest_date)+'">')+
+ fld("Amount paid (land or lease, KES)",'<input name="amount_paid" type="number" min="0" required value="'+esc(d.amount_paid||0)+'">')+
+ fld("Amount spent (seed, labour, inputs, KES)",'<input name="amount_spent" type="number" min="0" required value="'+esc(d.amount_spent||0)+'">')+
+ fld("Received from harvest (KES)",'<input name="harvest_income" type="number" min="0" required value="'+esc(d.harvest_income||0)+'">')+
+ '<div class="fa"><button class="pri" type="submit">Save season</button><button type="button" data-act="cancel">Cancel</button></div></form></section>'}
+function expPanel(D,ro){var s=D.seasons.filter(function(x){return x.season_id==S.selSeason})[0];if(!s)return"";var E=ro?(DEMO.exp[s.season_id]||[]):S.exp,tot=sum(E,function(e){return e.amount}),g={};
+ E.forEach(function(e){g[e.category]=(g[e.category]||0)+num(e.amount)});var mx=Math.max.apply(null,Object.keys(g).map(function(c){return g[c]}).concat([1]));
+ var h='<section><h2>Expenses: '+esc(s.label)+'</h2><p class="cap">Line items behind the "Amount spent" figure for this season.</p><div class="kpis"><div class="kpi"><small>Itemised so far</small><b>'+k(tot)+'</b></div><div class="kpi"><small>Amount spent on season</small><b>'+k(s.amount_spent)+'</b></div></div>';
+ if(!ro&&Math.round(tot)!=Math.round(num(s.amount_spent))&&E.length)h+='<div class="note">Itemised expenses are '+k(Math.abs(tot-num(s.amount_spent)))+(tot>num(s.amount_spent)?' more':' less')+' than the amount spent. <button class="sm" data-act="sync">Set amount spent to '+k(tot)+'</button></div>';
+ h+=Object.keys(g).sort(function(a,b){return g[b]-g[a]}).map(function(c){return'<div class="cb"><span>'+esc(c)+'</span><div><i style="width:'+g[c]/mx*100+'%"></i></div><span class="n">'+Math.round(g[c]).toLocaleString()+'</span></div>'}).join("");
+ if(E.length)h+='<div class="tw"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="n">Amount</th><th></th></tr></thead><tbody>'+E.map(function(e){return'<tr><td>'+esc(e.spent_on)+'</td><td>'+esc(e.category)+'</td><td>'+esc(e.description)+'</td><td class="n">'+num(e.amount).toLocaleString()+'</td><td>'+(ro?'':'<button class="sm" data-act="dx" data-id="'+e.id+'">Delete</button>')+'</td></tr>'}).join("")+'</tbody></table></div>';
+ else h+='<p class="mute">'+(ro?'No line items in this sample season.':'No expenses recorded for this season yet.')+'</p>';
+ if(!ro)h+='<h3 style="font-size:17px;margin-top:16px">Add expense</h3><form id="xf" style="margin-top:10px">'+fld("Category",'<input name="category" list="cats" required><datalist id="cats">'+CATS.map(function(c){return'<option value="'+c+'">'}).join("")+'</datalist>')+fld("Description",'<input name="description">')+fld("Amount (KES)",'<input name="amount" type="number" min="0" step="0.01" required>')+fld("Date",'<input name="spent_on" type="date" required value="'+new Date().toISOString().slice(0,10)+'">')+'<div class="fa"><button class="pri" type="submit">Add expense</button></div></form>';
+ return h+'<p><button data-act="closeexp">Close expenses</button></p></section>'}
+// ---------- main view ----------
+function view(D,ro){var F=D.farms,SS=D.seasons,T=sum(F,function(x){return x.total_paid})+sum(F,function(x){return x.total_spent}),I=sum(F,function(x){return x.total_income}),N=I-T,Ac=sum(F,function(x){return x.acres}),h="";
+ var mx=Math.max.apply(null,F.map(function(x){return Math.abs(x.net_profit/(x.acres||1))}).concat([1]));
+ if(F.length){
+  h+='<div class="strip">'+F.map(function(x){var p=x.net_profit/(x.acres||1),a=.45+.55*Math.min(1,Math.abs(p)/mx);return'<button class="plot'+(S.sel==x.farm_id?' on':'')+'" data-act="sel" data-id="'+x.farm_id+'" style="flex-grow:'+(x.acres||1)+';background-color:rgba('+(x.net_profit>=0?"46,125,79":"179,65,47")+','+a+')"><strong>'+esc(x.name)+'</strong><span>'+x.acres+' ac<br>'+Math.round(p/1000)+'k/ac</span></button>'}).join("")+'</div><p class="cap">Plot width shows acres. Green is profit, red is loss. Select a plot to open its seasons.</p>';
+  h+='<div class="kpis">'+[["Total acres",Ac],["Farms",F.length],["Seasons recorded",SS.length],["Paid and spent",k(T)],["Harvest income",k(I)],["Net profit",'<span class="'+cl(N)+'">'+k(N)+'</span>'],["Return on cost",(T?Math.round(N/T*100):0)+"%"],["Profit per acre",k(N/(Ac||1))]].map(function(x){return'<div class="kpi"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>'}).join("")+'</div>';
+  var ln=lines(F,SS);if(ln)h+='<section><h2>Net profit over time</h2><p class="cap">One line per farm. Each dot is a harvest.</p>'+ln+'</section>'}
+ if(S.form&&S.form.t=="farm"&&!ro)h+=farmForm(S.form.d);
+ var fm=F.filter(function(x){return x.farm_id==S.sel})[0];
+ if(fm){var ss=SS.filter(function(x){return x.farm_id==fm.farm_id});
+  h+='<section><h2>'+esc(fm.name)+'</h2><p class="cap">Owner '+esc(fm.owner_name)+' · '+esc(fm.location)+' · Area chief: '+esc(fm.area_chief||"not recorded")+' · '+fm.acres+' acres · '+fm.seasons_recorded+' seasons recorded</p>'+
+  '<div class="kpis"><div class="kpi"><small>Net profit, all seasons</small><b class="'+cl(fm.net_profit)+'">'+k(fm.net_profit)+'</b></div><div class="kpi"><small>Profit per acre</small><b>'+k(fm.net_profit/(fm.acres||1))+'</b></div><div class="kpi"><small>Average per season</small><b>'+k(fm.seasons_recorded?fm.net_profit/fm.seasons_recorded:0)+'</b></div></div>';
+  if(ss.length){h+='<h3 style="font-size:17px">Season comparison</h3>'+bars(ss)+compare(ss)}
+  h+='<div class="tw" style="margin-top:14px"><table><thead><tr><th>Season</th><th>Crop</th><th>Harvest</th><th class="n">Paid</th><th class="n">Spent</th><th class="n">Income</th><th class="n">Net profit</th><th class="n">Return</th><th></th></tr></thead><tbody>'+
+  ss.map(function(x){return'<tr><td><b>'+esc(x.label)+'</b></td><td>'+esc(x.crop)+'</td><td>'+esc(x.harvest_date||"")+'</td><td class="n">'+num(x.amount_paid).toLocaleString()+'</td><td class="n">'+num(x.amount_spent).toLocaleString()+'</td><td class="n">'+num(x.harvest_income).toLocaleString()+'</td><td class="n '+cl(x.net_profit)+'"><b>'+num(x.net_profit).toLocaleString()+'</b></td><td class="n">'+(x.roi_percent==null?"":Math.round(x.roi_percent)+"%")+'</td><td><button class="sm" data-act="ex" data-id="'+x.season_id+'">Expenses</button>'+(ro?'':' <button class="sm" data-act="es" data-id="'+x.season_id+'">Edit</button> <button class="sm" data-act="ds" data-id="'+x.season_id+'">Delete</button>')+'</td></tr>'}).join("")+'</tbody></table></div>';
+  if(!ss.length)h+='<p class="mute">No seasons yet. Add the first one to start the history.</p>';
+  if(!ro)h+='<p><button class="pri" data-act="addseason">Add season</button> <button data-act="ef">Edit farm</button> <button data-act="df">Delete farm</button></p>';
+  h+='</section>';
+  if(S.form&&S.form.t=="season"&&!ro)h+=seasonForm(S.form.d);
+  if(S.selSeason)h+=expPanel(D,ro)}
+ return h}
+function authView(){return'<div class="auth"><h1 style="font-size:40px">Furrow</h1><p class="mute">Every acre, every shilling, one honest ledger. Sign in to open your records.</p>'+
+ '<div class="card"><form id="af"><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Password<input name="password" type="password" minlength="6" autocomplete="current-password" required></label>'+
+ '<div class="fa"><button class="pri" type="submit">Sign in</button><button type="button" data-act="signup">Create account</button></div></form>'+
+ '<p class="mute" style="text-align:center;margin:14px 0 8px">or</p><button style="width:100%" data-act="google">Continue with Google</button><p class="msg '+(S.err?'err':'')+'" role="status">'+esc(S.msg)+'</p></div></div>'}
+function appView(){var h='<header><b>Furrow</b><div><span class="cap">'+esc(S.user.email)+'</span> <button data-act="out">Sign out</button>'+(isSample()?'':' <button class="pri" data-act="addfarm">Add farm</button>')+'</div></header>';
+ h+='<div class="hero"><h1>Every acre, every shilling, one honest ledger.</h1></div>';
+ if(S.msg)h+='<p class="msg '+(S.err?'err':'')+'" role="status">'+esc(S.msg)+'</p>';
+ if(!S.loaded)return h+'<p class="mute">Loading your records…</p>';
+ if(isSample())return h+'<div class="banner"><span><b>Sample data.</b> This is an example ledger to show how Furrow works. It is not saved to your account and will not appear again once you start your own.</span><button data-act="start">Start my own ledger</button></div>'+view(DEMO,true);
+ if(!S.farms.length&&!(S.form&&S.form.t=="farm"))h+='<section><h2>Start your ledger</h2><p class="mute">No farms yet. Add your first farm, then record each season with its income and expenses.</p><button class="pri" data-act="addfarm">Add farm</button></section>';
+ return h+view({farms:S.farms,seasons:S.seasons},false)}
+function render(){A.innerHTML=S.user?appView():authView()}
+async function run(fn){S.err=false;try{await fn()}catch(e){S.err=true;var m=e.message||"Something went wrong.";S.msg=/failed to fetch|networkerror/i.test(m)?(location.protocol.indexOf("http")!==0||/claude|anthropic/.test(location.hostname)?"This page is running in a sandbox that blocks network access. Open it from http://localhost:3000 or your deployed site.":"Could not reach the database. Check your internet connection and try again."):m}render()}
+// ---------- events ----------
+document.addEventListener("submit",function(e){e.preventDefault();var fm=e.target,id=fm.getAttribute("id"),fd=Object.fromEntries(new FormData(fm));
+ if(id=="af")return run(async function(){var r=await sb.auth.signInWithPassword({email:fd.email,password:fd.password});if(r.error)throw r.error});
+ if(id=="ff")return run(async function(){var row={name:fd.name.trim(),owner_name:fd.owner_name.trim(),location:fd.location.trim(),area_chief:fd.area_chief.trim()||null,acres:+fd.acres},r;
+  r=fd.rid?await sb.from("farms").update(row).eq("id",fd.rid).select():await sb.from("farms").insert(row).select();if(r.error)throw r.error;S.sel=r.data[0].id;S.form=null;S.msg="Farm saved.";await load()});
+ if(id=="sf")return run(async function(){var row={label:fd.label.trim(),crop:fd.crop.trim()||null,harvest_date:fd.harvest_date||null,amount_paid:+fd.amount_paid,amount_spent:+fd.amount_spent,harvest_income:+fd.harvest_income},r;
+  if(fd.rid)r=await sb.from("seasons").update(row).eq("id",fd.rid);else{row.farm_id=S.sel;r=await sb.from("seasons").insert(row)}if(r.error)throw r.error;S.form=null;S.msg="Season saved.";await load()});
+ if(id=="xf")return run(async function(){var r=await sb.from("expenses").insert({season_id:S.selSeason,category:fd.category.trim(),description:fd.description.trim()||null,amount:+fd.amount,spent_on:fd.spent_on});if(r.error)throw r.error;S.msg="Expense added.";await load()})});
+document.addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var a=b.dataset.act,id=b.dataset.id;
+ if(a=="signup")return run(async function(){var x=document.querySelector("#af"),c={email:x.email.value,password:x.password.value};if(!c.email||c.password.length<6)throw new Error("Enter an email and a password of at least 6 characters.");var r=await sb.auth.signUp(c);if(r.error)throw r.error;S.msg=r.data.session?"":"Account created. Check your email to confirm it, then sign in."});
+ if(a=="google")return run(async function(){var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin}});if(r.error)throw r.error});
+ if(a=="out")return sb.auth.signOut();
+ if(a=="start")return run(async function(){S.skip=true;S.sel=null;S.selSeason=null;S.msg="";await sb.auth.updateUser({data:{sample_seen:true}})});
+ if(a=="sel"){S.sel=S.sel==id?null:id;S.selSeason=null;S.form=null;S.msg="";return render()}
+ if(a=="addfarm"){S.form={t:"farm"};return render()}
+ if(a=="ef"){S.form={t:"farm",d:S.farms.filter(function(x){return x.farm_id==S.sel}).map(function(x){return{id:x.farm_id,name:x.name,owner_name:x.owner_name,location:x.location,area_chief:x.area_chief,acres:x.acres}})[0]};return render()}
+ if(a=="addseason"){S.form={t:"season"};return render()}
+ if(a=="es"){S.form={t:"season",d:S.seasons.filter(function(x){return x.season_id==id})[0]};return render()}
+ if(a=="cancel"){S.form=null;return render()}
+ if(a=="ex")return run(async function(){S.selSeason=id;S.form=null;if(!isSample())await loadExp()});
+ if(a=="closeexp"){S.selSeason=null;return render()}
+ if(a=="sync")return run(async function(){var t=sum(S.exp,function(x){return x.amount}),r=await sb.from("seasons").update({amount_spent:t}).eq("id",S.selSeason);if(r.error)throw r.error;S.msg="Amount spent updated.";await load()});
+ if(a=="dx"&&confirm("Delete this expense?"))return run(async function(){var r=await sb.from("expenses").delete().eq("id",id);if(r.error)throw r.error;S.msg="Expense deleted.";await load()});
+ if(a=="ds"&&confirm("Delete this season and its expenses? This cannot be undone."))return run(async function(){var r=await sb.from("seasons").delete().eq("id",id);if(r.error)throw r.error;if(S.selSeason==id)S.selSeason=null;S.msg="Season deleted.";await load()});
+ if(a=="df"&&confirm("Delete this farm and all its seasons? This cannot be undone."))return run(async function(){var r=await sb.from("farms").delete().eq("id",S.sel);if(r.error)throw r.error;S.sel=null;S.selSeason=null;S.msg="Farm deleted.";await load()})});
+sb.auth.onAuthStateChange(function(ev,s){var prev=S.user&&S.user.id;S.user=s?s.user:null;
+ if(!S.user){S.farms=[];S.seasons=[];S.exp=[];S.sel=null;S.selSeason=null;S.loaded=false;S.skip=false;return render()}
+ if(S.user.id!==prev)setTimeout(load,0);else render()});
+render();
+</script></body></html>
