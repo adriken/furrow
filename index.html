@@ -43,6 +43,27 @@ input,select,textarea{background:var(--bg);border:1px solid var(--line);border-r
 .leg{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin:6px 0 0}.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .cb{display:grid;grid-template-columns:110px 1fr 90px;gap:8px;align-items:center;font-size:14px;margin:6px 0}.cb i{display:block;height:10px;border-radius:5px;background:var(--gold)}
 .note{border-left:4px solid var(--gold);padding-left:12px;margin:8px 0}
+html{-webkit-text-size-adjust:100%}
+input,select,textarea{font-size:16px}
+img,svg{max-width:100%}
+@media(pointer:coarse){button,input,select{min-height:44px}button.sm{min-height:40px;padding:6px 12px}}
+@media(max-width:900px){main{padding:16px 14px 48px}.kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+@media(max-width:600px){
+ header{flex-direction:column;align-items:flex-start}
+ .hero h1{margin-top:18px}
+ section,.card{padding:14px}
+ .strip{height:auto;flex-wrap:wrap}.plot{flex:1 1 44%!important;min-height:84px}
+ .kpi b{font-size:19px}
+ .banner{flex-direction:column;align-items:flex-start}.banner button{width:100%}
+ .fa button{flex:1 1 auto}
+ .cb{grid-template-columns:84px 1fr 70px}
+ table{min-width:0}thead{display:none}
+ table,tbody,tr,td{display:block;width:100%}
+ tr{border:1px solid var(--line);border-radius:10px;padding:6px 12px;margin-bottom:10px}
+ td{display:flex;justify-content:space-between;gap:12px;white-space:normal;border:0;padding:6px 0;text-align:right}
+ td:before{content:attr(data-l);color:var(--mute);text-align:left}
+ td[data-l=""]{justify-content:flex-start;gap:8px;flex-wrap:wrap}td[data-l=""]:before{display:none}
+}
 </style></head><body><main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -73,16 +94,17 @@ async function load(){
 async function loadExp(){var r=await sb.from("expenses").select("*").eq("season_id",S.selSeason).order("spent_on");S.exp=r.data||[]}
 function isSample(){return S.user&&S.loaded&&!S.skip&&!(S.user.user_metadata&&S.user.user_metadata.sample_seen)&&S.farms.length==0}
 // ---------- charts ----------
-function trunc(t){t=String(t||"");return t.length>13?t.slice(0,12)+"…":t}
-function bars(ss){var W=640,H=230,pl=44,pb=44,pt=16,n=ss.length,mx=Math.max.apply(null,ss.map(function(x){return Math.max(num(x.amount_paid)+num(x.amount_spent),num(x.harvest_income))}).concat([1])),gw=(W-pl-10)/n,bw=Math.min(34,gw/3),b=H-pb;
+function cw(){return Math.max(300,Math.min(900,Math.round(A.clientWidth)-72))}
+function trunc(t,n){t=String(t||"");n=n||13;return t.length>n?t.slice(0,Math.max(3,n-1))+"…":t}
+function bars(ss){var W=cw(),H=Math.round(W*.36)+60,pl=44,pb=44,pt=16,n=ss.length,mx=Math.max.apply(null,ss.map(function(x){return Math.max(num(x.amount_paid)+num(x.amount_spent),num(x.harvest_income))}).concat([1])),gw=(W-pl-10)/n,bw=Math.min(34,gw/3),b=H-pb;
  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Income versus cost for each season" style="width:100%;height:auto">';
  [0,.5,1].forEach(function(t){var y=pt+(H-pt-pb)*(1-t);s+='<line x1="'+pl+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)"/><text x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+Math.round(mx*t/1000)+'k</text>'});
  ss.forEach(function(x,i){var c=num(x.amount_paid)+num(x.amount_spent),r=num(x.harvest_income),cx=pl+gw*i+gw/2,ch=(H-pt-pb)*c/mx,rh=(H-pt-pb)*r/mx;
   s+='<rect x="'+(cx-bw-1)+'" y="'+(b-ch)+'" width="'+bw+'" height="'+ch+'" rx="3" fill="var(--loss)"/><rect x="'+(cx+1)+'" y="'+(b-rh)+'" width="'+bw+'" height="'+rh+'" rx="3" fill="var(--gain)"/>'+
-  '<text x="'+cx+'" y="'+(b+16)+'" text-anchor="middle" font-size="11" fill="var(--ink)">'+esc(trunc(x.label))+'</text><text x="'+cx+'" y="'+(b+31)+'" text-anchor="middle" font-size="11" font-weight="700" fill="var(--'+(x.net_profit>=0?"gain":"loss")+')">'+kk(x.net_profit)+'</text>'});
+  '<text x="'+cx+'" y="'+(b+16)+'" text-anchor="middle" font-size="11" fill="var(--ink)">'+esc(trunc(x.label,Math.floor(gw/6.5)))+'</text><text x="'+cx+'" y="'+(b+31)+'" text-anchor="middle" font-size="11" font-weight="700" fill="var(--'+(x.net_profit>=0?"gain":"loss")+')">'+kk(x.net_profit)+'</text>'});
  return s+'</svg><div class="leg"><span><i style="background:var(--loss)"></i>Paid + spent</span><span><i style="background:var(--gain)"></i>Harvest income</span><span>Number under each season is net profit</span></div>'}
 function lines(F,SS){var d=SS.filter(function(x){return x.harvest_date});if(d.length<2)return"";
- var W=640,H=240,pl=44,pr=16,pt=14,pb=28,ts=d.map(function(x){return+new Date(x.harvest_date)}),t0=Math.min.apply(null,ts),t1=Math.max.apply(null,ts),ys=d.map(function(x){return num(x.net_profit)}),lo=Math.min.apply(null,ys.concat([0])),hi=Math.max.apply(null,ys.concat([0]));if(hi==lo)hi=lo+1;
+ var W=cw(),H=Math.round(W*.38)+40,pl=44,pr=16,pt=14,pb=28,ts=d.map(function(x){return+new Date(x.harvest_date)}),t0=Math.min.apply(null,ts),t1=Math.max.apply(null,ts),ys=d.map(function(x){return num(x.net_profit)}),lo=Math.min.apply(null,ys.concat([0])),hi=Math.max.apply(null,ys.concat([0]));if(hi==lo)hi=lo+1;
  var X=function(t){return t1==t0?(pl+W-pr)/2:pl+(W-pl-pr)*(t-t0)/(t1-t0)},Y=function(v){return pt+(H-pt-pb)*(hi-v)/(hi-lo)};
  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Net profit over time for each farm" style="width:100%;height:auto">';
  [lo,0,hi].forEach(function(v){s+='<line x1="'+pl+'" x2="'+W+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"'+(v==0?' stroke-width="2"':'')+'/><text x="'+(pl-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--mute)">'+Math.round(v/1000)+'k</text>'});
@@ -150,7 +172,11 @@ function appView(){var h='<header><b>Furrow</b><div><span class="cap">'+esc(S.us
  if(isSample())return h+'<div class="banner"><span><b>Sample data.</b> This is an example ledger to show how Furrow works. It is not saved to your account and will not appear again once you start your own.</span><button data-act="start">Start my own ledger</button></div>'+view(DEMO,true);
  if(!S.farms.length&&!(S.form&&S.form.t=="farm"))h+='<section><h2>Start your ledger</h2><p class="mute">No farms yet. Add your first farm, then record each season with its income and expenses.</p><button class="pri" data-act="addfarm">Add farm</button></section>';
  return h+view({farms:S.farms,seasons:S.seasons},false)}
-function render(){A.innerHTML=S.user?appView():authView()}
+var lastW=0;
+function render(){A.innerHTML=S.user?appView():authView();lastW=cw();
+ A.querySelectorAll("table").forEach(function(t){var h=[].map.call(t.querySelectorAll("thead th"),function(x){return x.textContent});t.querySelectorAll("tbody tr").forEach(function(r){[].forEach.call(r.children,function(c,i){c.setAttribute("data-l",h[i]||"")})})})}
+window.addEventListener("resize",function(){clearTimeout(window._rt);window._rt=setTimeout(function(){var ae=document.activeElement,xa=document.querySelector("#xf [name=amount]");
+ if(S.user&&!S.form&&!(xa&&xa.value)&&!(ae&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName))&&Math.abs(cw()-lastW)>40)render()},250)});
 async function run(fn){S.err=false;try{await fn()}catch(e){S.err=true;var m=e.message||"Something went wrong.";S.msg=/failed to fetch|networkerror/i.test(m)?(location.protocol.indexOf("http")!==0||/claude|anthropic/.test(location.hostname)?"This page is running in a sandbox that blocks network access. Open it from http://localhost:3000 or your deployed site.":"Could not reach the database. Check your internet connection and try again."):m}render()}
 // ---------- events ----------
 document.addEventListener("submit",function(e){e.preventDefault();var fm=e.target,id=fm.getAttribute("id"),fd=Object.fromEntries(new FormData(fm));
