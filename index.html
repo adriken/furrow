@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Furrow — Farm Ledger</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2317301f'/><path d='M5 26Q16 20 27 26M5 21Q16 15 27 21' stroke='%23e0a800' stroke-width='2' fill='none' stroke-linecap='round' opacity='.55'/><path d='M16 22V8' stroke='%23e0a800' stroke-width='2' stroke-linecap='round'/><ellipse cx='13' cy='12' rx='2.2' ry='4' transform='rotate(-25 13 12)' fill='%23e0a800'/><ellipse cx='19' cy='12' rx='2.2' ry='4' transform='rotate(25 19 12)' fill='%23e0a800'/><ellipse cx='16' cy='8' rx='2' ry='3.4' fill='%23e0a800'/></svg>"><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
 :root{--bg:#eef2ea;--panel:#fbfcf8;--ink:#17301f;--mute:#5d6f60;--line:#cfd9c9;--gain:#2e7d4f;--loss:#b3412f;--gold:#e0a800}
@@ -64,7 +64,47 @@ img,svg{max-width:100%}
  td:before{content:attr(data-l);color:var(--mute);text-align:left}
  td[data-l=""]{justify-content:flex-start;gap:8px;flex-wrap:wrap}td[data-l=""]:before{display:none}
 }
-</style></head><body><main id="app"></main>
+
+.wrap{display:grid;grid-template-columns:1.15fr 1fr;min-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+.scene{position:relative;overflow:hidden;color:#fff;min-height:300px}
+.scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene .t{position:relative;padding:36px;max-width:30em;text-shadow:0 1px 8px rgba(0,0,0,.45)}
+.scene h1{font-size:clamp(30px,4.2vw,52px);margin:18px 0 10px}.scene p{margin:0;opacity:.92}
+.brand{display:flex;align-items:center;gap:10px;font:800 24px Fraunces,Georgia,serif}
+.side{display:flex;align-items:center;justify-content:center;padding:28px 18px}
+.acard{width:100%;max-width:410px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 14px 40px rgba(10,30,18,.14)}
+.acard form{display:block}.acard h2{font-size:26px;margin:0}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:18px}
+.tabs button{border:0;background:transparent;padding:9px;border-radius:8px;font-weight:700;color:var(--mute)}
+.tabs button[aria-selected=true]{background:var(--panel);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.sub{color:var(--mute);margin:4px 0 16px;font-size:14px}
+.acard label{margin-bottom:12px}
+.in{display:flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px}
+.in:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(224,168,0,.25)}
+.in input{flex:1;min-width:0;border:0;background:transparent;padding:11px 12px;font-size:16px;outline:0;border-radius:10px}
+.in button{border:0;background:transparent;color:var(--mute);padding:0 12px;font-size:13px}
+.meter{display:flex;gap:4px;margin:-4px 0 4px}.meter i{flex:1;height:5px;border-radius:3px;background:var(--line);transition:background .2s}
+.hint{font-size:12px;color:var(--mute);margin-bottom:12px;min-height:1.2em}
+.go{width:100%;border:0;background:var(--ink);color:var(--bg);font-weight:700;border-radius:10px;padding:12px;display:flex;justify-content:center;gap:8px;align-items:center;min-height:46px}
+.go[disabled]{opacity:.7}.sp{width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:r .7s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+.or{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:13px;margin:14px 0}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+.g{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:11px;display:flex;justify-content:center;gap:10px;align-items:center;font-weight:500;min-height:46px}
+.amsg{min-height:1.4em;font-size:14px;margin:12px 0 0;text-align:center}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.hr{display:flex;gap:10px;align-items:center}
+.me{position:relative}
+.mb{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:30px;padding:5px 12px 5px 5px;min-height:44px}
+.av{width:34px;height:34px;border-radius:50%;background:var(--gold);color:#17301f;display:grid;place-items:center;font-weight:800;font-size:14px}
+.mn{position:absolute;right:0;top:calc(100% + 8px);width:min(270px,calc(100vw - 28px));background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 14px 40px rgba(10,30,18,.2);z-index:5}
+.mn .em{font-size:13px;color:var(--mute);padding:0 4px 10px;border-bottom:1px solid var(--line);margin-bottom:8px;overflow-wrap:anywhere}
+.mn button.it{display:flex;width:100%;gap:10px;align-items:center;border:0;background:transparent;text-align:left;padding:10px 8px;border-radius:8px;min-height:44px}
+.mn button.it:hover{background:var(--bg)}.so{color:var(--loss)}
+.ed{display:flex;gap:6px;margin:4px 0 6px}.ed input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:16px}
+.ed button{border:0;background:var(--ink);color:var(--bg);border-radius:8px;padding:0 12px;font-weight:700}
+[hidden]{display:none!important}
+@media(max-width:800px){.wrap{grid-template-columns:1fr}.scene{min-height:230px}.scene .t{padding:22px}.scene p{display:none}.scene h1{font-size:28px;margin:10px 0 0}.side{padding:0 14px 28px;margin-top:-26px;position:relative}}
+@media(max-width:420px){#dn{display:none}.mb{padding:5px}}
+</style></head><body><div id="app"></div><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#17301f"/><path d="M5 26Q16 20 27 26M5 21Q16 15 27 21" stroke="#e0a800" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/><path d="M16 22V8" stroke="#e0a800" stroke-width="2" stroke-linecap="round"/><ellipse cx="13" cy="12" rx="2.2" ry="4" transform="rotate(-25 13 12)" fill="#e0a800"/><ellipse cx="19" cy="12" rx="2.2" ry="4" transform="rotate(25 19 12)" fill="#e0a800"/><ellipse cx="16" cy="8" rx="2" ry="3.4" fill="#e0a800"/></symbol></defs></svg>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 var sb=supabase.createClient("https://fuhgjptdmvtbuaopglqg.supabase.co","sb_publishable_NqRaoe4OjdVLxjZZin3SZA_yuRwvKwo");
@@ -161,35 +201,101 @@ function view(D,ro){var F=D.farms,SS=D.seasons,T=sum(F,function(x){return x.tota
   if(S.form&&S.form.t=="season"&&!ro)h+=seasonForm(S.form.d);
   if(S.selSeason)h+=expPanel(D,ro)}
  return h}
-function authView(){return'<div class="auth"><h1 style="font-size:40px">Furrow</h1><p class="mute">Every acre, every shilling, one honest ledger. Sign in to open your records.</p>'+
- '<div class="card"><form id="af"><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Password<input name="password" type="password" minlength="6" autocomplete="current-password" required></label>'+
- '<div class="fa"><button class="pri" type="submit">Sign in</button><button type="button" data-act="signup">Create account</button></div></form>'+
- '<p class="mute" style="text-align:center;margin:14px 0 8px">or</p><button style="width:100%" data-act="google">Continue with Google</button><p class="msg '+(S.err?'err':'')+'" role="status">'+esc(S.msg)+'</p></div></div>'}
-function appView(){var h='<header><b>Furrow</b><div><span class="cap">'+esc(S.user.email)+'</span> <button data-act="out">Sign out</button>'+(isSample()?'':' <button class="pri" data-act="addfarm">Add farm</button>')+'</div></header>';
- h+='<div class="hero"><h1>Every acre, every shilling, one honest ledger.</h1></div>';
+var AM="in",MARK='<svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><use href="#mark"/></svg>';
+function authView(){if(!S.booted)return'<p class="mute" style="padding:30px">Loading…</p>';
+ return'<div class="wrap"><div class="scene"><canvas id="cv" aria-hidden="true"></canvas><div class="t"><div class="brand">'+MARK+'Furrow</div><h1>Every acre, every shilling, one honest ledger.</h1><p>The field behind you changes with the time of day. Your records stay exactly as you left them.</p></div></div>'+
+ '<div class="side"><div class="acard"><div class="tabs" role="tablist"><button type="button" role="tab" id="t1" data-act="tabin" aria-selected="true">Sign in</button><button type="button" role="tab" id="t2" data-act="tabup" aria-selected="false">Create account</button></div>'+
+ '<h2 id="ttl">Welcome back</h2><p class="sub" id="sub">Sign in to open your records.</p>'+
+ '<form id="af" novalidate><label id="nl" hidden>Your name<span class="in"><input name="name" id="nm" autocomplete="name" placeholder="e.g. Adrian Adams"></span></label>'+
+ '<label>Email<span class="in"><input name="email" id="em" type="email" autocomplete="email" placeholder="you@example.com"></span></label>'+
+ '<label>Password<span class="in"><input name="password" id="pw" type="password" autocomplete="current-password" placeholder="At least 8 characters"><button type="button" id="sh" data-act="showpw" aria-label="Show password">Show</button></span></label>'+
+ '<div class="meter" id="mt" hidden><i></i><i></i><i></i><i></i></div><div class="hint" id="ht"></div>'+
+ '<button class="go" id="go" type="submit"><span id="gl">Sign in</span></button></form><div class="or">or</div>'+
+ '<button class="g" type="button" data-act="google">'+'<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.9-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>'+'Continue with Google</button><p class="amsg" id="amsg" role="status" aria-live="polite"></p></div></div></div>'}
+function $i(i){return document.getElementById(i)}
+function authMsg(t,ok){var m=$i("amsg");if(m){m.textContent=t||"";m.style.color=ok?"var(--gain)":"var(--loss)"}}
+function str(){var m=$i("mt"),p=$i("pw");if(!m||!p)return;var v=p.value,n=(v.length>=8)+(/[a-z]/.test(v)&&/[A-Z]/.test(v))+/\d/.test(v)+(/[^A-Za-z0-9]/.test(v)||v.length>=12),col=["var(--loss)","var(--loss)","var(--gold)","var(--gain)","var(--gain)"][n];[].forEach.call(m.children,function(i,x){i.style.background=x<n?col:"var(--line)"})}
+function setMode(m){AM=m;if(!$i("ttl"))return;var up=m=="up";$i("t1").setAttribute("aria-selected",!up);$i("t2").setAttribute("aria-selected",up);
+ $i("ttl").textContent=up?"Start your ledger":"Welcome back";$i("sub").textContent=up?"Create an account. It takes under a minute.":"Sign in to open your records.";
+ $i("nl").hidden=!up;$i("mt").hidden=!up;var gl=$i("gl");if(gl)gl.textContent=up?"Create account":"Sign in";$i("pw").autocomplete=up?"new-password":"current-password";
+ $i("ht").textContent=up?"Use 8 or more characters with a mix of letters and numbers.":"";authMsg("");str()}
+function busy(on){var b=$i("go");if(!b)return;b.disabled=on;b.innerHTML=on?'<span class="sp"></span><span>'+(AM=="up"?"Creating account…":"Signing in…")+'</span>':'<span id="gl">'+(AM=="up"?"Create account":"Sign in")+'</span>'}
+function friendly(m){m=String(m||"");if(/invalid login/i.test(m))return"That email and password don't match. Check them and try again.";if(/not confirmed/i.test(m))return"Confirm your email first. Check your inbox for the link.";if(/already registered/i.test(m))return"An account with this email already exists. Try signing in.";if(/rate limit|too many/i.test(m))return"Too many attempts. Wait a few minutes and try again.";
+ if(/failed to fetch|networkerror/i.test(m))return location.protocol.indexOf("http")!==0||/claude|anthropic/.test(location.hostname)?"This page is running in a sandbox that blocks network access. Open it from http://localhost:3000 or your live site.":"Could not reach the server. Check your internet connection and try again.";return m}
+async function authSubmit(fd){var em=(fd.email||"").trim(),pw=fd.password||"",nm=(fd.name||"").trim(),up=AM=="up";authMsg("");
+ if(!/^\S+@\S+\.\S+$/.test(em))return authMsg("Enter a valid email address.");
+ if(up&&!nm)return authMsg("Enter your name so we can greet you properly.");
+ if(pw.length<(up?8:6))return authMsg(up?"Use at least 8 characters for your password.":"Enter your password.");
+ busy(true);
+ try{var r=up?await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nm}}}):await sb.auth.signInWithPassword({email:em,password:pw});if(r.error)throw r.error;
+  if(up&&r.data.user&&r.data.user.identities&&r.data.user.identities.length===0)authMsg("An account with this email already exists. Try signing in.");
+  else if(up&&!r.data.session){setMode("in");authMsg("Account created. Check your email to confirm it, then sign in.",true)}}
+ catch(e){authMsg(friendly(e.message))}
+ busy(false)}
+async function authGoogle(){authMsg("");try{var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin}});if(r.error)throw r.error}catch(e){authMsg(friendly(e.message))}}
+// living field
+var SC={id:0,W:0,H:0,mx:.5,tx:.5,P:[],cv:null,c:null,still:matchMedia("(prefers-reduced-motion:reduce)").matches};
+var PAL={night:["#08140f","#17382c","#cfd8e8"],dawn:["#3b4a63","#e8a86a","#ffd9a0"],day:["#1f5a44","#86bf8f","#fff1a8"],dusk:["#2c2a4a","#d98a55","#ffc27a"]};
+function pal(){var h=new Date().getHours()+new Date().getMinutes()/60;return h<5||h>=19.5?PAL.night:h<8?PAL.dawn:h<17?PAL.day:PAL.dusk}
+function scSize(){var d=Math.min(2,devicePixelRatio||1);SC.W=SC.cv.clientWidth;SC.H=SC.cv.clientHeight;SC.cv.width=SC.W*d;SC.cv.height=SC.H*d;SC.c.setTransform(d,0,0,d,0,0);SC.P=[];for(var i=0;i<36;i++)SC.P.push({x:Math.random()*SC.W,y:Math.random()*SC.H,r:Math.random()*1.8+.6,v:Math.random()*.25+.08,p:Math.random()*6})}
+function scDraw(ts){var c=SC.c,W=SC.W,H=SC.H,t=ts/1000,p=pal();SC.mx+=(SC.tx-SC.mx)*.05;var mx=SC.mx;
+ var g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,p[0]);g.addColorStop(.75,p[1]);g.addColorStop(1,p[0]);c.fillStyle=g;c.fillRect(0,0,W,H);
+ var og=c.createRadialGradient(W*.78,H*.3,2,W*.78,H*.3,H*.5);og.addColorStop(0,p[2]);og.addColorStop(.12,p[2]);og.addColorStop(1,"rgba(255,255,255,0)");c.globalAlpha=.55;c.fillStyle=og;c.fillRect(0,0,W,H);c.globalAlpha=1;
+ SC.P.forEach(function(q){q.y-=q.v;q.x+=Math.sin(t+q.p)*.25+(mx-.5)*.5;if(q.y<-5){q.y=H+5;q.x=Math.random()*W}c.globalAlpha=.5;c.fillStyle=p[2];c.beginPath();c.arc(q.x,q.y,q.r,0,6.3);c.fill()});c.globalAlpha=1;
+ var cols=["#3f8a63","#7fcf9b","#f0c24a"],lines=["#1c4a35","#2e7d4f","#e0a800"];
+ for(var l=0;l<3;l++){var base=H*(.64+.1*l),h=34+l*30,sp=13-l*2;
+  c.fillStyle=l==2?"#0f2a1d":l==1?"#143826":"#102e20";c.fillRect(0,base,W,H-base);c.strokeStyle=lines[l];c.lineWidth=1.6+l*.5;c.fillStyle=cols[l];
+  for(var x=-10;x<W+10;x+=sp){var sw=Math.sin(t*1.3+x*.02+l)*(5+l*4)+(mx-.5)*34*(l+1)*.5,hh=h+Math.sin(x*3.1)*8,ty=base-hh;
+   c.beginPath();c.moveTo(x,base);c.quadraticCurveTo(x+sw*.3,base-hh*.55,x+sw,ty);c.stroke();
+   c.beginPath();c.ellipse(x+sw,ty-3,1.8+l*.5,5+l,sw*.04,0,6.3);c.fill()}}}
+function startScene(){SC.id++;var id=SC.id;SC.cv=$i("cv");if(!SC.cv)return;SC.c=SC.cv.getContext("2d");scSize();
+ function loop(ts){if(id!==SC.id||!SC.cv.isConnected)return;if(SC.cv.clientWidth!==SC.W||SC.cv.clientHeight!==SC.H)scSize();scDraw(ts);if(!SC.still)requestAnimationFrame(loop)}
+ requestAnimationFrame(loop)}
+addEventListener("pointermove",function(e){SC.tx=e.clientX/innerWidth});
+addEventListener("resize",function(){if(SC.cv&&SC.cv.isConnected){scSize();scDraw(performance.now())}});
+// signed-in header helpers
+function nice(n){return n.replace(/\b\w/g,function(x){return x.toUpperCase()})}
+function dispName(u){var m=u.user_metadata||{},n=m.full_name||m.name;return String(n||nice((u.email||"").split("@")[0].replace(/[._-]+/g," "))).trim()||"there"}
+function ini(n){var p=n.trim().split(/\s+/);return((p[0]||"?")[0]+(p.length>1?p[p.length-1][0]:"")).toUpperCase()}
+function greet(){var h=new Date().getHours();return h<12?"Good morning":h<17?"Good afternoon":"Good evening"}
+function paintUser(){if(!S.user)return;var n=dispName(S.user),f=n.split(" ")[0];[["dn",f],["av",ini(n)],["mem",S.user.email],["hi",greet()+", "+f]].forEach(function(q){var e=$i(q[0]);if(e)e.textContent=q[1]})}
+function menuShut(){var mn=$i("mn"),mb=$i("mb");if(mn)mn.hidden=true;if(mb)mb.setAttribute("aria-expanded","false");var d=$i("edb");if(d)d.hidden=true}
+
+function appView(){return"<main>"+appInner()+"</main>"}
+function appInner(){var nm=dispName(S.user),h='<div class="top"><div class="brand">'+MARK+'Furrow</div><div class="hr">'+(isSample()?'':'<button class="pri" data-act="addfarm">Add farm</button>')+
+ '<div class="me"><button class="mb" id="mb" data-act="menu" aria-haspopup="menu" aria-expanded="false"><span class="av" id="av">'+esc(ini(nm))+'</span><span id="dn">'+esc(nm.split(" ")[0])+'</span><span aria-hidden="true">▾</span></button>'+
+ '<div class="mn" id="mn" role="menu" hidden><div class="em" id="mem">'+esc(S.user.email)+'</div><button class="it" role="menuitem" data-act="editname">✎ Edit display name</button>'+
+ '<div class="ed" id="edb" hidden><input id="ein" aria-label="Display name" maxlength="40" value="'+esc(nm)+'"><button data-act="savename">Save</button></div>'+
+ '<button class="it so" role="menuitem" data-act="out">⎋ Sign out</button></div></div></div></div>';
+ h+='<div class="hero"><h1 id="hi">'+greet()+', '+esc(nm.split(" ")[0])+'</h1><p class="sub">Every acre, every shilling, one honest ledger.</p></div>';
  if(S.msg)h+='<p class="msg '+(S.err?'err':'')+'" role="status">'+esc(S.msg)+'</p>';
  if(!S.loaded)return h+'<p class="mute">Loading your records…</p>';
  if(isSample())return h+'<div class="banner"><span><b>Sample data.</b> This is an example ledger to show how Furrow works. It is not saved to your account and will not appear again once you start your own.</span><button data-act="start">Start my own ledger</button></div>'+view(DEMO,true);
  if(!S.farms.length&&!(S.form&&S.form.t=="farm"))h+='<section><h2>Start your ledger</h2><p class="mute">No farms yet. Add your first farm, then record each season with its income and expenses.</p><button class="pri" data-act="addfarm">Add farm</button></section>';
  return h+view({farms:S.farms,seasons:S.seasons},false)}
 var lastW=0;
-function render(){A.innerHTML=S.user?appView():authView();lastW=cw();
+function render(){A.innerHTML=S.user?appView():authView();lastW=cw();if(!S.user){startScene();setMode(AM)}
  A.querySelectorAll("table").forEach(function(t){var h=[].map.call(t.querySelectorAll("thead th"),function(x){return x.textContent});t.querySelectorAll("tbody tr").forEach(function(r){[].forEach.call(r.children,function(c,i){c.setAttribute("data-l",h[i]||"")})})})}
 window.addEventListener("resize",function(){clearTimeout(window._rt);window._rt=setTimeout(function(){var ae=document.activeElement,xa=document.querySelector("#xf [name=amount]");
  if(S.user&&!S.form&&!(xa&&xa.value)&&!(ae&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName))&&Math.abs(cw()-lastW)>40)render()},250)});
 async function run(fn){S.err=false;try{await fn()}catch(e){S.err=true;var m=e.message||"Something went wrong.";S.msg=/failed to fetch|networkerror/i.test(m)?(location.protocol.indexOf("http")!==0||/claude|anthropic/.test(location.hostname)?"This page is running in a sandbox that blocks network access. Open it from http://localhost:3000 or your deployed site.":"Could not reach the database. Check your internet connection and try again."):m}render()}
 // ---------- events ----------
 document.addEventListener("submit",function(e){e.preventDefault();var fm=e.target,id=fm.getAttribute("id"),fd=Object.fromEntries(new FormData(fm));
- if(id=="af")return run(async function(){var r=await sb.auth.signInWithPassword({email:fd.email,password:fd.password});if(r.error)throw r.error});
+ if(id=="af")return authSubmit(fd);
  if(id=="ff")return run(async function(){var row={name:fd.name.trim(),owner_name:fd.owner_name.trim(),location:fd.location.trim(),area_chief:fd.area_chief.trim()||null,acres:+fd.acres},r;
   r=fd.rid?await sb.from("farms").update(row).eq("id",fd.rid).select():await sb.from("farms").insert(row).select();if(r.error)throw r.error;S.sel=r.data[0].id;S.form=null;S.msg="Farm saved.";await load()});
  if(id=="sf")return run(async function(){var row={label:fd.label.trim(),crop:fd.crop.trim()||null,harvest_date:fd.harvest_date||null,amount_paid:+fd.amount_paid,amount_spent:+fd.amount_spent,harvest_income:+fd.harvest_income},r;
   if(fd.rid)r=await sb.from("seasons").update(row).eq("id",fd.rid);else{row.farm_id=S.sel;r=await sb.from("seasons").insert(row)}if(r.error)throw r.error;S.form=null;S.msg="Season saved.";await load()});
  if(id=="xf")return run(async function(){var r=await sb.from("expenses").insert({season_id:S.selSeason,category:fd.category.trim(),description:fd.description.trim()||null,amount:+fd.amount,spent_on:fd.spent_on});if(r.error)throw r.error;S.msg="Expense added.";await load()})});
 document.addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var a=b.dataset.act,id=b.dataset.id;
- if(a=="signup")return run(async function(){var x=document.querySelector("#af"),c={email:x.email.value,password:x.password.value};if(!c.email||c.password.length<6)throw new Error("Enter an email and a password of at least 6 characters.");var r=await sb.auth.signUp(c);if(r.error)throw r.error;S.msg=r.data.session?"":"Account created. Check your email to confirm it, then sign in."});
- if(a=="google")return run(async function(){var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin}});if(r.error)throw r.error});
- if(a=="out")return sb.auth.signOut();
+ if(a=="tabin")return setMode("in");
+ if(a=="tabup")return setMode("up");
+ if(a=="showpw"){var pw=$i("pw"),sh=pw.type=="password";pw.type=sh?"text":"password";b.textContent=sh?"Hide":"Show";b.setAttribute("aria-label",sh?"Hide password":"Show password");return}
+ if(a=="google")return authGoogle();
+ if(a=="out"){menuShut();return sb.auth.signOut()}
+ if(a=="menu"){var mn=$i("mn");mn.hidden=!mn.hidden;b.setAttribute("aria-expanded",String(!mn.hidden));if(mn.hidden)$i("edb").hidden=true;return}
+ if(a=="editname"){$i("edb").hidden=false;var ei=$i("ein");ei.focus();ei.select();return}
+ if(a=="savename"){var v=$i("ein").value.trim();if(!v)return;return sb.auth.updateUser({data:{full_name:v}}).then(function(r){if(r.error){S.err=true;S.msg=friendly(r.error.message);return render()}S.user=r.data.user;menuShut();paintUser()})}
  if(a=="start")return run(async function(){S.skip=true;S.sel=null;S.selSeason=null;S.msg="";await sb.auth.updateUser({data:{sample_seen:true}})});
  if(a=="sel"){S.sel=S.sel==id?null:id;S.selSeason=null;S.form=null;S.msg="";return render()}
  if(a=="addfarm"){S.form={t:"farm"};return render()}
@@ -203,8 +309,11 @@ document.addEventListener("click",function(e){var b=e.target.closest("button[dat
  if(a=="dx"&&confirm("Delete this expense?"))return run(async function(){var r=await sb.from("expenses").delete().eq("id",id);if(r.error)throw r.error;S.msg="Expense deleted.";await load()});
  if(a=="ds"&&confirm("Delete this season and its expenses? This cannot be undone."))return run(async function(){var r=await sb.from("seasons").delete().eq("id",id);if(r.error)throw r.error;if(S.selSeason==id)S.selSeason=null;S.msg="Season deleted.";await load()});
  if(a=="df"&&confirm("Delete this farm and all its seasons? This cannot be undone."))return run(async function(){var r=await sb.from("farms").delete().eq("id",S.sel);if(r.error)throw r.error;S.sel=null;S.selSeason=null;S.msg="Farm deleted.";await load()})});
-sb.auth.onAuthStateChange(function(ev,s){var prev=S.user&&S.user.id;S.user=s?s.user:null;
+sb.auth.onAuthStateChange(function(ev,s){var prev=S.user&&S.user.id;S.user=s?s.user:null;S.booted=true;
  if(!S.user){S.farms=[];S.seasons=[];S.exp=[];S.sel=null;S.selSeason=null;S.loaded=false;S.skip=false;return render()}
- if(S.user.id!==prev)setTimeout(load,0);else render()});
+ if(S.user.id!==prev){render();setTimeout(load,0)}else paintUser()});
+document.addEventListener("input",function(e){if(e.target.id=="pw")str()});
+document.addEventListener("click",function(e){if(!e.target.closest(".me"))menuShut()});
+document.addEventListener("keydown",function(e){if(e.key=="Escape")menuShut()});
 render();
 </script></body></html>
