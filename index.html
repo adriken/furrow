@@ -104,6 +104,22 @@ img,svg{max-width:100%}
 [hidden]{display:none!important}
 @media(max-width:800px){.wrap{grid-template-columns:1fr}.scene{min-height:230px}.scene .t{padding:22px}.scene p{display:none}.scene h1{font-size:28px;margin:10px 0 0}.side{padding:0 14px 28px;margin-top:-26px;position:relative}}
 @media(max-width:420px){#dn{display:none}.mb{padding:5px}}
+.rpt{max-width:900px;margin:0 auto;padding:18px 16px 60px}
+.rbar{display:flex;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.rhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:16px}
+.rmeta{text-align:right;font-size:13px;color:var(--mute)}.rt1{font-size:clamp(26px,4vw,38px);margin-bottom:4px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+@media print{
+ :root{--bg:#fff;--panel:#fff;--ink:#111;--mute:#555;--line:#ccc;--gain:#1e6b3f;--loss:#a3321f;--gold:#b88700}
+ @page{margin:14mm}
+ body{background:#fff;color:#111;padding:0;font-size:12px}
+ .noprint{display:none!important}
+ .rpt{max-width:none;padding:0}
+ .rpt section{break-inside:avoid;border:1px solid #ccc;margin-bottom:14px}
+ .rpt .kpi{break-inside:avoid}
+ table{min-width:0!important;font-size:11px}tr{break-inside:avoid}thead{display:table-header-group}
+ .tw{overflow:visible}
+}
 </style></head><body><div id="app"></div><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#17301f"/><path d="M5 26Q16 20 27 26M5 21Q16 15 27 21" stroke="#e0a800" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/><path d="M16 22V8" stroke="#e0a800" stroke-width="2" stroke-linecap="round"/><ellipse cx="13" cy="12" rx="2.2" ry="4" transform="rotate(-25 13 12)" fill="#e0a800"/><ellipse cx="19" cy="12" rx="2.2" ry="4" transform="rotate(25 19 12)" fill="#e0a800"/><ellipse cx="16" cy="8" rx="2" ry="3.4" fill="#e0a800"/></symbol></defs></svg>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -186,6 +202,7 @@ function view(D,ro){var F=D.farms,SS=D.seasons,T=sum(F,function(x){return x.tota
  if(F.length){
   h+='<div class="strip">'+F.map(function(x){var p=x.net_profit/(x.acres||1),a=.45+.55*Math.min(1,Math.abs(p)/mx);return'<button class="plot'+(S.sel==x.farm_id?' on':'')+'" data-act="sel" data-id="'+x.farm_id+'" style="flex-grow:'+(x.acres||1)+';background-color:rgba('+(x.net_profit>=0?"46,125,79":"179,65,47")+','+a+')"><strong>'+esc(x.name)+'</strong><span>'+x.acres+' ac<br>'+Math.round(p/1000)+'k/ac</span></button>'}).join("")+'</div><p class="cap">Plot width shows acres. Green is profit, red is loss. Select a plot to open its seasons.</p>';
   h+='<div class="kpis">'+[["Total acres",Ac],["Farms",F.length],["Seasons recorded",SS.length],["Paid and spent",k(T)],["Harvest income",k(I)],["Net profit",'<span class="'+cl(N)+'">'+k(N)+'</span>'],["Return on cost",(T?Math.round(N/T*100):0)+"%"],["Profit per acre",k(N/(Ac||1))]].map(function(x){return'<div class="kpi"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>'}).join("")+'</div>';
+  if(!ro)h+=exportsBox();
   var ln=lines(F,SS);if(ln)h+='<section><h2>Net profit over time</h2><p class="cap">One line per farm. Each dot is a harvest.</p>'+ln+'</section>'}
  if(S.form&&S.form.t=="farm"&&!ro)h+=farmForm(S.form.d);
  var fm=F.filter(function(x){return x.farm_id==S.sel})[0];
@@ -196,7 +213,7 @@ function view(D,ro){var F=D.farms,SS=D.seasons,T=sum(F,function(x){return x.tota
   h+='<div class="tw" style="margin-top:14px"><table><thead><tr><th>Season</th><th>Crop</th><th>Harvest</th><th class="n">Paid</th><th class="n">Spent</th><th class="n">Income</th><th class="n">Net profit</th><th class="n">Return</th><th></th></tr></thead><tbody>'+
   ss.map(function(x){return'<tr><td><b>'+esc(x.label)+'</b></td><td>'+esc(x.crop)+'</td><td>'+esc(x.harvest_date||"")+'</td><td class="n">'+num(x.amount_paid).toLocaleString()+'</td><td class="n">'+num(x.amount_spent).toLocaleString()+'</td><td class="n">'+num(x.harvest_income).toLocaleString()+'</td><td class="n '+cl(x.net_profit)+'"><b>'+num(x.net_profit).toLocaleString()+'</b></td><td class="n">'+(x.roi_percent==null?"":Math.round(x.roi_percent)+"%")+'</td><td><button class="sm" data-act="ex" data-id="'+x.season_id+'">Expenses</button>'+(ro?'':' <button class="sm" data-act="es" data-id="'+x.season_id+'">Edit</button> <button class="sm" data-act="ds" data-id="'+x.season_id+'">Delete</button>')+'</td></tr>'}).join("")+'</tbody></table></div>';
   if(!ss.length)h+='<p class="mute">No seasons yet. Add the first one to start the history.</p>';
-  if(!ro)h+='<p><button class="pri" data-act="addseason">Add season</button> <button data-act="ef">Edit farm</button> <button data-act="df">Delete farm</button></p>';
+  if(!ro)h+='<p><button class="pri" data-act="addseason">Add season</button> <button data-act="ef">Edit farm</button> <button data-act="df">Delete farm</button></p><div class="btns" style="margin-bottom:6px"><button data-act="rep" data-id="'+fm.farm_id+'">Print farm report</button><button data-act="csvs" data-id="'+fm.farm_id+'">Seasons CSV</button><button data-act="csvx" data-id="'+fm.farm_id+'">Expenses CSV</button></div>';
   h+='</section>';
   if(S.form&&S.form.t=="season"&&!ro)h+=seasonForm(S.form.d);
   if(S.selSeason)h+=expPanel(D,ro)}
@@ -233,6 +250,36 @@ async function authSubmit(fd){var em=(fd.email||"").trim(),pw=fd.password||"",nm
  catch(e){authMsg(friendly(e.message))}
  busy(false)}
 async function authGoogle(){authMsg("");try{var r=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin}});if(r.error)throw r.error}catch(e){authMsg(friendly(e.message))}}
+// ---------- reports and exports ----------
+function exportsBox(){return'<section><h2>Reports and exports</h2><p class="cap">Print or save a report as PDF, or download your records as CSV files that open in Excel and Google Sheets.</p><div class="btns"><button class="pri" data-act="rep" data-id="all">Print full report</button><button data-act="csvs" data-id="all">Seasons CSV</button><button data-act="csvx" data-id="all">Expenses CSV</button></div></section>'}
+function rptSeasons(ss){return'<div class="tw"><table><thead><tr><th>Season</th><th>Crop</th><th>Harvest</th><th class="n">Paid</th><th class="n">Spent</th><th class="n">Income</th><th class="n">Net profit</th><th class="n">Return</th></tr></thead><tbody>'+
+ ss.map(function(x){return'<tr><td><b>'+esc(x.label)+'</b></td><td>'+esc(x.crop)+'</td><td>'+esc(x.harvest_date||"")+'</td><td class="n">'+num(x.amount_paid).toLocaleString()+'</td><td class="n">'+num(x.amount_spent).toLocaleString()+'</td><td class="n">'+num(x.harvest_income).toLocaleString()+'</td><td class="n '+cl(x.net_profit)+'"><b>'+num(x.net_profit).toLocaleString()+'</b></td><td class="n">'+(x.roi_percent==null?"":Math.round(x.roi_percent)+"%")+'</td></tr>'}).join("")+'</tbody></table></div>'}
+function reportView(){var id=S.report,one=id!=="all",F=S.farms.filter(function(f){return!one||f.farm_id==id});
+ if(!F.length){S.report=null;return appView()}
+ var ids={};F.forEach(function(f){ids[f.farm_id]=1});var SS=S.seasons.filter(function(x){return ids[x.farm_id]}),sid={};SS.forEach(function(x){sid[x.season_id]=1});
+ var E=(S.allExp||[]).filter(function(e){return sid[e.season_id]}),T=sum(F,function(x){return x.total_paid})+sum(F,function(x){return x.total_spent}),I=sum(F,function(x){return x.total_income}),N=I-T,Ac=sum(F,function(x){return x.acres}),
+ d=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+ var h='<div class="rpt"><div class="noprint rbar"><button data-act="rclose">← Back to ledger</button><button class="pri" data-act="rprint">Print / Save as PDF</button></div>'+
+ '<div class="rhead"><div class="brand">'+MARK+'Furrow</div><div class="rmeta"><b>Farm report</b><br>'+d+'<br>Prepared for '+esc(dispName(S.user))+'</div></div>'+
+ '<h1 class="rt1">'+(one?esc(F[0].name):"All farms")+'</h1>'+(one?'<p class="cap">Owner '+esc(F[0].owner_name)+' · '+esc(F[0].location)+' · Area chief: '+esc(F[0].area_chief||"not recorded")+' · '+F[0].acres+' acres</p>':'<p class="cap">'+F.length+' farms · '+Ac+' acres · '+SS.length+' seasons recorded</p>')+
+ '<div class="kpis">'+[["Paid and spent",k(T)],["Harvest income",k(I)],["Net profit",'<span class="'+cl(N)+'">'+k(N)+'</span>'],["Return on cost",(T?Math.round(N/T*100):0)+"%"],["Profit per acre",k(N/(Ac||1))]].map(function(x){return'<div class="kpi"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>'}).join("")+'</div>';
+ if(!one){h+='<section><h2>Farms at a glance</h2><div class="tw"><table><thead><tr><th>Farm</th><th>Owner</th><th>Location</th><th class="n">Acres</th><th class="n">Seasons</th><th class="n">Paid + spent</th><th class="n">Income</th><th class="n">Net profit</th></tr></thead><tbody>'+
+  F.map(function(x){return'<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.owner_name)+'</td><td>'+esc(x.location)+'</td><td class="n">'+x.acres+'</td><td class="n">'+x.seasons_recorded+'</td><td class="n">'+(num(x.total_paid)+num(x.total_spent)).toLocaleString()+'</td><td class="n">'+num(x.total_income).toLocaleString()+'</td><td class="n '+cl(x.net_profit)+'"><b>'+num(x.net_profit).toLocaleString()+'</b></td></tr>'}).join("")+'</tbody></table></div></section>';
+  var ln=lines(F,SS);if(ln)h+='<section><h2>Net profit over time</h2>'+ln+'</section>';
+  F.forEach(function(f){var ss=SS.filter(function(x){return x.farm_id==f.farm_id});h+='<section><h2>'+esc(f.name)+'</h2><p class="cap">'+esc(f.owner_name)+' · '+esc(f.location)+' · '+f.acres+' acres</p>'+(ss.length?rptSeasons(ss):'<p class="mute">No seasons recorded.</p>')+'</section>'})}
+ else{if(SS.length)h+='<section><h2>Season comparison</h2>'+bars(SS)+compare(SS)+'</section><section><h2>Seasons</h2>'+rptSeasons(SS)+'</section>';else h+='<section><p class="mute">No seasons recorded for this farm yet.</p></section>'}
+ var g={},tot=sum(E,function(e){return e.amount});E.forEach(function(e){g[e.category]=(g[e.category]||0)+num(e.amount)});
+ h+='<section><h2>Expenses by category</h2>'+(E.length?'<div class="tw"><table><thead><tr><th>Category</th><th class="n">Amount</th><th class="n">Share</th></tr></thead><tbody>'+Object.keys(g).sort(function(a,b){return g[b]-g[a]}).map(function(c){return'<tr><td>'+esc(c)+'</td><td class="n">'+Math.round(g[c]).toLocaleString()+'</td><td class="n">'+Math.round(g[c]/(tot||1)*100)+'%</td></tr>'}).join("")+'<tr><td><b>Total itemised</b></td><td class="n"><b>'+Math.round(tot).toLocaleString()+'</b></td><td></td></tr></tbody></table></div>':'<p class="mute">No itemised expenses have been recorded.</p>')+'</section>';
+ return h+'<p class="cap" style="margin-top:16px">All amounts in KES. Net profit = harvest income − amount paid − amount spent. Generated by Furrow on '+d+'.</p></div>'}
+function cell(v){if(v==null)return"";if(typeof v=="number")return String(v);v=String(v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return/[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function csv(rows){return"\uFEFF"+rows.map(function(r){return r.map(cell).join(",")}).join("\r\n")}
+function fname(type,id){var f=id=="all"?"all-farms":(S.farms.filter(function(x){return x.farm_id==id})[0]||{name:"farm"}).name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");return"furrow-"+type+"-"+f+"-"+new Date().toISOString().slice(0,10)+".csv"}
+function dl(name,text){var b=new Blob([text],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},1500);S.err=false;S.msg="Download started: "+name}
+function dlSeasons(id){var ss=S.seasons.filter(function(x){return id=="all"||x.farm_id==id});if(!ss.length){S.err=true;S.msg="There are no seasons to export yet.";return}
+ dl(fname("seasons",id),csv([["Farm","Owner","Location","Area chief","Acres","Season","Crop","Harvest date","Amount paid (KES)","Amount spent (KES)","Harvest income (KES)","Net profit (KES)","Return on cost (%)","Profit per acre (KES)","Itemised expenses (KES)"]].concat(ss.map(function(x){return[x.farm_name,x.owner_name,x.location,x.area_chief,num(x.acres),x.label,x.crop,x.harvest_date,num(x.amount_paid),num(x.amount_spent),num(x.harvest_income),num(x.net_profit),x.roi_percent==null?"":Math.round(num(x.roi_percent)*10)/10,x.profit_per_acre==null?"":Math.round(num(x.profit_per_acre)),num(x.itemised_expenses)]}))))}
+async function dlExpenses(id){var r=await sb.from("expenses").select("*").order("spent_on");if(r.error)throw r.error;var m={};S.seasons.forEach(function(x){m[x.season_id]=x});
+ var rows=[["Date","Farm","Season","Category","Description","Amount (KES)"]];(r.data||[]).forEach(function(e){var x=m[e.season_id];if(!x||(id!="all"&&x.farm_id!=id))return;rows.push([e.spent_on,x.farm_name,x.label,e.category,e.description,num(e.amount)])});
+ if(rows.length==1){S.err=true;S.msg="There are no expenses to export yet.";return}dl(fname("expenses",id),csv(rows))}
 // living field
 var SC={id:0,W:0,H:0,mx:.5,tx:.5,P:[],cv:null,c:null,still:matchMedia("(prefers-reduced-motion:reduce)").matches};
 var PAL={night:["#08140f","#17382c","#cfd8e8"],dawn:["#3b4a63","#e8a86a","#ffd9a0"],day:["#1f5a44","#86bf8f","#fff1a8"],dusk:["#2c2a4a","#d98a55","#ffc27a"]};
@@ -274,7 +321,7 @@ function appInner(){var nm=dispName(S.user),h='<div class="top"><div class="bran
  if(!S.farms.length&&!(S.form&&S.form.t=="farm"))h+='<section><h2>Start your ledger</h2><p class="mute">No farms yet. Add your first farm, then record each season with its income and expenses.</p><button class="pri" data-act="addfarm">Add farm</button></section>';
  return h+view({farms:S.farms,seasons:S.seasons},false)}
 var lastW=0;
-function render(){A.innerHTML=S.user?appView():authView();lastW=cw();if(!S.user){startScene();setMode(AM)}
+function render(){A.innerHTML=S.user?(S.report?reportView():appView()):authView();lastW=cw();if(!S.user){startScene();setMode(AM)}
  A.querySelectorAll("table").forEach(function(t){var h=[].map.call(t.querySelectorAll("thead th"),function(x){return x.textContent});t.querySelectorAll("tbody tr").forEach(function(r){[].forEach.call(r.children,function(c,i){c.setAttribute("data-l",h[i]||"")})})})}
 window.addEventListener("resize",function(){clearTimeout(window._rt);window._rt=setTimeout(function(){var ae=document.activeElement,xa=document.querySelector("#xf [name=amount]");
  if(S.user&&!S.form&&!(xa&&xa.value)&&!(ae&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName))&&Math.abs(cw()-lastW)>40)render()},250)});
@@ -288,6 +335,11 @@ document.addEventListener("submit",function(e){e.preventDefault();var fm=e.targe
   if(fd.rid)r=await sb.from("seasons").update(row).eq("id",fd.rid);else{row.farm_id=S.sel;r=await sb.from("seasons").insert(row)}if(r.error)throw r.error;S.form=null;S.msg="Season saved.";await load()});
  if(id=="xf")return run(async function(){var r=await sb.from("expenses").insert({season_id:S.selSeason,category:fd.category.trim(),description:fd.description.trim()||null,amount:+fd.amount,spent_on:fd.spent_on});if(r.error)throw r.error;S.msg="Expense added.";await load()})});
 document.addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var a=b.dataset.act,id=b.dataset.id;
+ if(a=="rep")return run(async function(){var r=await sb.from("expenses").select("*").order("spent_on");if(r.error)throw r.error;S.allExp=r.data||[];S.report=id;S.msg="";window.scrollTo(0,0)});
+ if(a=="rclose"){S.report=null;return render()}
+ if(a=="rprint")return window.print();
+ if(a=="csvs")return run(async function(){dlSeasons(id)});
+ if(a=="csvx")return run(function(){return dlExpenses(id)});
  if(a=="tabin")return setMode("in");
  if(a=="tabup")return setMode("up");
  if(a=="showpw"){var pw=$i("pw"),sh=pw.type=="password";pw.type=sh?"text":"password";b.textContent=sh?"Hide":"Show";b.setAttribute("aria-label",sh?"Hide password":"Show password");return}
@@ -310,7 +362,7 @@ document.addEventListener("click",function(e){var b=e.target.closest("button[dat
  if(a=="ds"&&confirm("Delete this season and its expenses? This cannot be undone."))return run(async function(){var r=await sb.from("seasons").delete().eq("id",id);if(r.error)throw r.error;if(S.selSeason==id)S.selSeason=null;S.msg="Season deleted.";await load()});
  if(a=="df"&&confirm("Delete this farm and all its seasons? This cannot be undone."))return run(async function(){var r=await sb.from("farms").delete().eq("id",S.sel);if(r.error)throw r.error;S.sel=null;S.selSeason=null;S.msg="Farm deleted.";await load()})});
 sb.auth.onAuthStateChange(function(ev,s){var prev=S.user&&S.user.id;S.user=s?s.user:null;S.booted=true;
- if(!S.user){S.farms=[];S.seasons=[];S.exp=[];S.sel=null;S.selSeason=null;S.loaded=false;S.skip=false;return render()}
+ if(!S.user){S.farms=[];S.seasons=[];S.exp=[];S.sel=null;S.selSeason=null;S.loaded=false;S.skip=false;S.report=null;S.allExp=null;return render()}
  if(S.user.id!==prev){render();setTimeout(load,0)}else paintUser()});
 document.addEventListener("input",function(e){if(e.target.id=="pw")str()});
 document.addEventListener("click",function(e){if(!e.target.closest(".me"))menuShut()});
