@@ -120,6 +120,9 @@ img,svg{max-width:100%}
  table{min-width:0!important;font-size:11px}tr{break-inside:avoid}thead{display:table-header-group}
  .tw{overflow:visible}
 }
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+#lb img{max-width:100%;max-height:78vh;border-radius:10px;background:#fff}.lbx{display:flex;gap:14px;align-items:center}.lbl{color:#fff}
+@media print{#lb{display:none}}
 </style></head><body><div id="app"></div><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="mark" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#17301f"/><path d="M5 26Q16 20 27 26M5 21Q16 15 27 21" stroke="#e0a800" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/><path d="M16 22V8" stroke="#e0a800" stroke-width="2" stroke-linecap="round"/><ellipse cx="13" cy="12" rx="2.2" ry="4" transform="rotate(-25 13 12)" fill="#e0a800"/><ellipse cx="19" cy="12" rx="2.2" ry="4" transform="rotate(25 19 12)" fill="#e0a800"/><ellipse cx="16" cy="8" rx="2" ry="3.4" fill="#e0a800"/></symbol></defs></svg>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -192,10 +195,10 @@ function expPanel(D,ro){var s=D.seasons.filter(function(x){return x.season_id==S
  var h='<section><h2>Expenses: '+esc(s.label)+'</h2><p class="cap">Line items behind the "Amount spent" figure for this season.</p><div class="kpis"><div class="kpi"><small>Itemised so far</small><b>'+k(tot)+'</b></div><div class="kpi"><small>Amount spent on season</small><b>'+k(s.amount_spent)+'</b></div></div>';
  if(!ro&&Math.round(tot)!=Math.round(num(s.amount_spent))&&E.length)h+='<div class="note">Itemised expenses are '+k(Math.abs(tot-num(s.amount_spent)))+(tot>num(s.amount_spent)?' more':' less')+' than the amount spent. <button class="sm" data-act="sync">Set amount spent to '+k(tot)+'</button></div>';
  h+=Object.keys(g).sort(function(a,b){return g[b]-g[a]}).map(function(c){return'<div class="cb"><span>'+esc(c)+'</span><div><i style="width:'+g[c]/mx*100+'%"></i></div><span class="n">'+Math.round(g[c]).toLocaleString()+'</span></div>'}).join("");
- if(E.length)h+='<div class="tw"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="n">Amount</th><th></th></tr></thead><tbody>'+E.map(function(e){return'<tr><td>'+esc(e.spent_on)+'</td><td>'+esc(e.category)+'</td><td>'+esc(e.description)+'</td><td class="n">'+num(e.amount).toLocaleString()+'</td><td>'+(ro?'':'<button class="sm" data-act="dx" data-id="'+e.id+'">Delete</button>')+'</td></tr>'}).join("")+'</tbody></table></div>';
+ if(E.length)h+='<div class="tw"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th class="n">Amount</th><th></th></tr></thead><tbody>'+E.map(function(e){return'<tr><td>'+esc(e.spent_on)+'</td><td>'+esc(e.category)+'</td><td>'+esc(e.description)+'</td><td class="n">'+num(e.amount).toLocaleString()+'</td><td>'+rcpBtns(e,ro)+'</td></tr>'}).join("")+'</tbody></table></div>';
  else h+='<p class="mute">'+(ro?'No line items in this sample season.':'No expenses recorded for this season yet.')+'</p>';
- if(!ro)h+='<h3 style="font-size:17px;margin-top:16px">Add expense</h3><form id="xf" style="margin-top:10px">'+fld("Category",'<input name="category" list="cats" required><datalist id="cats">'+CATS.map(function(c){return'<option value="'+c+'">'}).join("")+'</datalist>')+fld("Description",'<input name="description">')+fld("Amount (KES)",'<input name="amount" type="number" min="0" step="0.01" required>')+fld("Date",'<input name="spent_on" type="date" required value="'+new Date().toISOString().slice(0,10)+'">')+'<div class="fa"><button class="pri" type="submit">Add expense</button></div></form>';
- return h+'<p><button data-act="closeexp">Close expenses</button></p></section>'}
+ if(!ro)h+='<h3 style="font-size:17px;margin-top:16px">Add expense</h3><form id="xf" style="margin-top:10px">'+fld("Category",'<input name="category" list="cats" required><datalist id="cats">'+CATS.map(function(c){return'<option value="'+c+'">'}).join("")+'</datalist>')+fld("Description",'<input name="description">')+fld("Amount (KES)",'<input name="amount" type="number" min="0" step="0.01" required>')+fld("Date",'<input name="spent_on" type="date" required value="'+new Date().toISOString().slice(0,10)+'">')+fld("Receipt photo (optional)",'<input name="receipt" type="file" accept="image/*">')+'<div class="fa"><button class="pri" type="submit">Add expense</button></div></form>';
+ return h+'<input type="file" id="rfile" accept="image/*" hidden><p><button data-act="closeexp">Close expenses</button></p></section>'}
 // ---------- main view ----------
 function view(D,ro){var F=D.farms,SS=D.seasons,T=sum(F,function(x){return x.total_paid})+sum(F,function(x){return x.total_spent}),I=sum(F,function(x){return x.total_income}),N=I-T,Ac=sum(F,function(x){return x.acres}),h="";
  var mx=Math.max.apply(null,F.map(function(x){return Math.abs(x.net_profit/(x.acres||1))}).concat([1]));
@@ -278,8 +281,24 @@ function dl(name,text){var b=new Blob([text],{type:"text/csv;charset=utf-8"}),u=
 function dlSeasons(id){var ss=S.seasons.filter(function(x){return id=="all"||x.farm_id==id});if(!ss.length){S.err=true;S.msg="There are no seasons to export yet.";return}
  dl(fname("seasons",id),csv([["Farm","Owner","Location","Area chief","Acres","Season","Crop","Harvest date","Amount paid (KES)","Amount spent (KES)","Harvest income (KES)","Net profit (KES)","Return on cost (%)","Profit per acre (KES)","Itemised expenses (KES)"]].concat(ss.map(function(x){return[x.farm_name,x.owner_name,x.location,x.area_chief,num(x.acres),x.label,x.crop,x.harvest_date,num(x.amount_paid),num(x.amount_spent),num(x.harvest_income),num(x.net_profit),x.roi_percent==null?"":Math.round(num(x.roi_percent)*10)/10,x.profit_per_acre==null?"":Math.round(num(x.profit_per_acre)),num(x.itemised_expenses)]}))))}
 async function dlExpenses(id){var r=await sb.from("expenses").select("*").order("spent_on");if(r.error)throw r.error;var m={};S.seasons.forEach(function(x){m[x.season_id]=x});
- var rows=[["Date","Farm","Season","Category","Description","Amount (KES)"]];(r.data||[]).forEach(function(e){var x=m[e.season_id];if(!x||(id!="all"&&x.farm_id!=id))return;rows.push([e.spent_on,x.farm_name,x.label,e.category,e.description,num(e.amount)])});
+ var rows=[["Date","Farm","Season","Category","Description","Amount (KES)","Receipt attached"]];(r.data||[]).forEach(function(e){var x=m[e.season_id];if(!x||(id!="all"&&x.farm_id!=id))return;rows.push([e.spent_on,x.farm_name,x.label,e.category,e.description,num(e.amount),e.receipt_path?"Yes":"No"])});
  if(rows.length==1){S.err=true;S.msg="There are no expenses to export yet.";return}dl(fname("expenses",id),csv(rows))}
+// ---------- receipt photos ----------
+function rcpBtns(e,ro){if(ro)return"";return(e.receipt_path?'<button class="sm" data-act="viewrcp" data-id="'+e.id+'">View receipt</button> <button class="sm" data-act="addrcp" data-id="'+e.id+'">Replace</button> <button class="sm" data-act="rmrcp" data-id="'+e.id+'">Remove</button> ':'<button class="sm" data-act="addrcp" data-id="'+e.id+'">Add receipt</button> ')+'<button class="sm" data-act="dx" data-id="'+e.id+'">Delete</button>'}
+async function toJpeg(file){if(!/^image\//.test(file.type))throw new Error("Choose an image file.");if(file.size>20e6)throw new Error("That photo is too large. Choose one under 20 MB.");
+ try{var bmp=await createImageBitmap(file,{imageOrientation:"from-image"}),sc=Math.min(1,1600/Math.max(bmp.width,bmp.height)),cv=document.createElement("canvas");cv.width=Math.round(bmp.width*sc);cv.height=Math.round(bmp.height*sc);
+  var cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(bmp,0,0,cv.width,cv.height);
+  return await new Promise(function(res,rej){cv.toBlob(function(b){b?res(b):rej(new Error("x"))},"image/jpeg",.82)})}
+ catch(e){if(file.size<=5e6&&/jpeg|png|webp/.test(file.type))return file;throw new Error("Could not process the photo. Try a smaller one.")}}
+async function uploadReceipt(id,file){var blob=await toJpeg(file),path=S.user.id+"/"+id+".jpg";
+ var u=await sb.storage.from("receipts").upload(path,blob,{upsert:true,contentType:blob.type||"image/jpeg"});if(u.error)throw u.error;
+ var r=await sb.from("expenses").update({receipt_path:path}).eq("id",id);if(r.error)throw r.error}
+async function purge(kind,id){var ids=kind=="season"?[id]:S.seasons.filter(function(x){return x.farm_id==id}).map(function(x){return x.season_id});if(!ids.length)return;
+ var r=await sb.from("expenses").select("receipt_path").in("season_id",ids).not("receipt_path","is",null),ps=(r.data||[]).map(function(x){return x.receipt_path});if(ps.length)await sb.storage.from("receipts").remove(ps)}
+function lbShut(){var d=$i("lb");if(d)d.remove()}
+function lightbox(url){lbShut();var d=document.createElement("div");d.id="lb";d.className="noprint";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Receipt photo");
+ d.innerHTML='<div class="lbx"><button class="pri" data-act="lbclose">Close</button><a class="lbl" target="_blank" rel="noopener">Open full size</a></div><img alt="Receipt photo">';
+ d.querySelector("img").src=url;d.querySelector("a").href=url;document.body.appendChild(d)}
 // living field
 var SC={id:0,W:0,H:0,mx:.5,tx:.5,P:[],cv:null,c:null,still:matchMedia("(prefers-reduced-motion:reduce)").matches};
 var PAL={night:["#08140f","#17382c","#cfd8e8"],dawn:["#3b4a63","#e8a86a","#ffd9a0"],day:["#1f5a44","#86bf8f","#fff1a8"],dusk:["#2c2a4a","#d98a55","#ffc27a"]};
@@ -333,13 +352,19 @@ document.addEventListener("submit",function(e){e.preventDefault();var fm=e.targe
   r=fd.rid?await sb.from("farms").update(row).eq("id",fd.rid).select():await sb.from("farms").insert(row).select();if(r.error)throw r.error;S.sel=r.data[0].id;S.form=null;S.msg="Farm saved.";await load()});
  if(id=="sf")return run(async function(){var row={label:fd.label.trim(),crop:fd.crop.trim()||null,harvest_date:fd.harvest_date||null,amount_paid:+fd.amount_paid,amount_spent:+fd.amount_spent,harvest_income:+fd.harvest_income},r;
   if(fd.rid)r=await sb.from("seasons").update(row).eq("id",fd.rid);else{row.farm_id=S.sel;r=await sb.from("seasons").insert(row)}if(r.error)throw r.error;S.form=null;S.msg="Season saved.";await load()});
- if(id=="xf")return run(async function(){var r=await sb.from("expenses").insert({season_id:S.selSeason,category:fd.category.trim(),description:fd.description.trim()||null,amount:+fd.amount,spent_on:fd.spent_on});if(r.error)throw r.error;S.msg="Expense added.";await load()})});
+ if(id=="xf")return run(async function(){var ri=fm.querySelector("[name=receipt]"),file=ri&&ri.files&&ri.files[0];var r=await sb.from("expenses").insert({season_id:S.selSeason,category:fd.category.trim(),description:fd.description.trim()||null,amount:+fd.amount,spent_on:fd.spent_on}).select();if(r.error)throw r.error;S.err=false;S.msg="Expense added.";
+  if(file){try{await uploadReceipt(r.data[0].id,file);S.msg="Expense added with receipt."}catch(e){S.err=true;S.msg="Expense saved, but the receipt could not be uploaded: "+friendly(e.message)+" Use Add receipt on the row to try again."}}
+  await load()})});
 document.addEventListener("click",function(e){var b=e.target.closest("button[data-act]");if(!b)return;var a=b.dataset.act,id=b.dataset.id;
  if(a=="rep")return run(async function(){var r=await sb.from("expenses").select("*").order("spent_on");if(r.error)throw r.error;S.allExp=r.data||[];S.report=id;S.msg="";window.scrollTo(0,0)});
  if(a=="rclose"){S.report=null;return render()}
  if(a=="rprint")return window.print();
  if(a=="csvs")return run(async function(){dlSeasons(id)});
  if(a=="csvx")return run(function(){return dlExpenses(id)});
+ if(a=="addrcp"){S.rcpFor=id;return $i("rfile").click()}
+ if(a=="viewrcp")return run(async function(){var ex=S.exp.filter(function(x){return x.id==id})[0];if(!ex||!ex.receipt_path)return;var r=await sb.storage.from("receipts").createSignedUrl(ex.receipt_path,300);if(r.error)throw r.error;lightbox(r.data.signedUrl)});
+ if(a=="rmrcp"&&confirm("Remove this receipt photo?"))return run(async function(){var ex=S.exp.filter(function(x){return x.id==id})[0];if(ex&&ex.receipt_path)await sb.storage.from("receipts").remove([ex.receipt_path]);var r=await sb.from("expenses").update({receipt_path:null}).eq("id",id);if(r.error)throw r.error;S.err=false;S.msg="Receipt removed.";await load()});
+ if(a=="lbclose")return lbShut();
  if(a=="tabin")return setMode("in");
  if(a=="tabup")return setMode("up");
  if(a=="showpw"){var pw=$i("pw"),sh=pw.type=="password";pw.type=sh?"text":"password";b.textContent=sh?"Hide":"Show";b.setAttribute("aria-label",sh?"Hide password":"Show password");return}
@@ -358,12 +383,15 @@ document.addEventListener("click",function(e){var b=e.target.closest("button[dat
  if(a=="ex")return run(async function(){S.selSeason=id;S.form=null;if(!isSample())await loadExp()});
  if(a=="closeexp"){S.selSeason=null;return render()}
  if(a=="sync")return run(async function(){var t=sum(S.exp,function(x){return x.amount}),r=await sb.from("seasons").update({amount_spent:t}).eq("id",S.selSeason);if(r.error)throw r.error;S.msg="Amount spent updated.";await load()});
- if(a=="dx"&&confirm("Delete this expense?"))return run(async function(){var r=await sb.from("expenses").delete().eq("id",id);if(r.error)throw r.error;S.msg="Expense deleted.";await load()});
- if(a=="ds"&&confirm("Delete this season and its expenses? This cannot be undone."))return run(async function(){var r=await sb.from("seasons").delete().eq("id",id);if(r.error)throw r.error;if(S.selSeason==id)S.selSeason=null;S.msg="Season deleted.";await load()});
- if(a=="df"&&confirm("Delete this farm and all its seasons? This cannot be undone."))return run(async function(){var r=await sb.from("farms").delete().eq("id",S.sel);if(r.error)throw r.error;S.sel=null;S.selSeason=null;S.msg="Farm deleted.";await load()})});
+ if(a=="dx"&&confirm("Delete this expense?"))return run(async function(){var ex=S.exp.filter(function(x){return x.id==id})[0];if(ex&&ex.receipt_path)await sb.storage.from("receipts").remove([ex.receipt_path]);var r=await sb.from("expenses").delete().eq("id",id);if(r.error)throw r.error;S.msg="Expense deleted.";await load()});
+ if(a=="ds"&&confirm("Delete this season and its expenses? This cannot be undone."))return run(async function(){await purge("season",id);var r=await sb.from("seasons").delete().eq("id",id);if(r.error)throw r.error;if(S.selSeason==id)S.selSeason=null;S.msg="Season deleted.";await load()});
+ if(a=="df"&&confirm("Delete this farm and all its seasons? This cannot be undone."))return run(async function(){await purge("farm",S.sel);var r=await sb.from("farms").delete().eq("id",S.sel);if(r.error)throw r.error;S.sel=null;S.selSeason=null;S.msg="Farm deleted.";await load()})});
 sb.auth.onAuthStateChange(function(ev,s){var prev=S.user&&S.user.id;S.user=s?s.user:null;S.booted=true;
  if(!S.user){S.farms=[];S.seasons=[];S.exp=[];S.sel=null;S.selSeason=null;S.loaded=false;S.skip=false;S.report=null;S.allExp=null;return render()}
  if(S.user.id!==prev){render();setTimeout(load,0)}else paintUser()});
+document.addEventListener("change",function(e){if(e.target.id=="rfile"&&e.target.files[0]){var f=e.target.files[0],id=S.rcpFor;e.target.value="";run(async function(){await uploadReceipt(id,f);S.err=false;S.msg="Receipt saved.";await load()})}});
+document.addEventListener("click",function(e){if(e.target.id=="lb")lbShut()});
+document.addEventListener("keydown",function(e){if(e.key=="Escape")lbShut()});
 document.addEventListener("input",function(e){if(e.target.id=="pw")str()});
 document.addEventListener("click",function(e){if(!e.target.closest(".me"))menuShut()});
 document.addEventListener("keydown",function(e){if(e.key=="Escape")menuShut()});
