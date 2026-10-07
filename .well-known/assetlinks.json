@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.furrow_dxnv.twa",
+        "sha256_cert_fingerprints": ["B0:70:B3:78:99:9E:E0:6B:07:60:E7:92:00:4F:69:A6:81:64:BE:E8:D7:88:2C:F1:64:26:DC:52:3D:7D:D2:A1"]
+      }
+    }]
