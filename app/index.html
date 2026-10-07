@@ -152,6 +152,7 @@ async function pull(){var pend={};M.outbox.forEach(function(o){if(o.table)pend[o
   await clr(t);for(var x of next)await put(t,x);M[t]=next}}
 async function sync(){if(busy||!S.user||!navigator.onLine||!S.booted)return;
  var ss=await sb.auth.getSession().catch(function(){return{data:{}}});if(!ss.data||!ss.data.session){return}
+ await checkAccess();if(S.blocked)return;
  busy=true;S.syncing=true;render();
  try{while(M.outbox.length){var o=M.outbox[0];
    try{await push(o)}catch(e){if(isNet(e))throw e;S.failed.push({what:(o.table||o.op)+" "+o.op,msg:e.message||String(e)});await put("kv",S.failed,"failed")}
@@ -265,6 +266,7 @@ function render(){if(S.fatal)return;if(S.booted)window.__booted=true;var sc=$("s
  if(!S.booted){sc.innerHTML='<p class="cap" style="padding:30px">Loading…</p>';nv.hidden=true;return}
  if(S.fatal){sc.innerHTML='<p class="note">'+esc(S.fatal)+'</p>';nv.hidden=true;return}
  if(!S.user){sc.innerHTML="";nv.hidden=true;S.sheet=null}
+ else if(S.blocked){sc.innerHTML=blockedView();nv.hidden=true;S.sheet=null}
  else if(S.report){var r=reportView();if(r){sc.innerHTML=r;nv.hidden=true}else{sc.innerHTML=({home:home,farms:farmsTab,reports:reportsTab,more:moreTab})[S.tab]();nv.hidden=false;nv.innerHTML=navHtml()}}
  else{sc.innerHTML=({home:home,farms:farmsTab,reports:reportsTab,more:moreTab})[S.tab]();nv.hidden=false;nv.innerHTML=navHtml()}
  sc.scrollTop=top;
@@ -287,7 +289,11 @@ async function authSubmit(fd){var em=(fd.email||"").trim(),pw=fd.password||"",nm
  var g=$("go");if(g){g.disabled=false;g.textContent=up?"Create account":"Sign in"}}
 async function signOut(){var p=M.outbox.length;if(p&&!confirm(p+" change"+(p>1?"s have":" has")+" not synced yet. Signing out now will lose "+(p>1?"them":"it")+". Sign out anyway?"))return;
  if(p===0&&S.online){try{await sb.auth.signOut()}catch(e){}}
- Object.keys(localStorage).forEach(function(x){if(x.indexOf("sb-")==0)localStorage.removeItem(x)});await wipe();S.user=null;S.booted=true;S.tab="home";S.farm=null;S.season=null;S.report=null;S.sheet=null;S.af={};render()}
+ Object.keys(localStorage).forEach(function(x){if(x.indexOf("sb-")==0)localStorage.removeItem(x)});await wipe();S.user=null;S.blocked=false;S.blockMsg="";S.booted=true;S.tab="home";S.farm=null;S.season=null;S.report=null;S.sheet=null;S.af={};render()}
+// ---------- access switch (set per account in the access_flags table) ----------
+async function checkAccess(){if(!S.user||!navigator.onLine)return;try{var r=await sb.from("access_flags").select("email,blocked,message");if(r.error||!r.data)return;var me=String(S.user.email||"").toLowerCase(),row=r.data.filter(function(x){return String(x.email).toLowerCase()==me})[0]||r.data.filter(function(x){return x.email=="*"})[0]||{},b=!!row.blocked,m=row.message||"";await put("kv",{id:S.user.id,blocked:b,message:m},"access");if(b!==!!S.blocked||m!==S.blockMsg){S.blocked=b;S.blockMsg=m;render()}}catch(e){}}
+async function applyAccess(){try{var ac=await get("kv","access");if(ac&&S.user&&ac.id==S.user.id){S.blocked=!!ac.blocked;S.blockMsg=ac.message||""}}catch(e){}}
+function blockedView(){return'<div class="top"><div class="brand">'+MARK+'Furrow</div></div><div class="card" style="margin-top:18vh;text-align:center;padding:34px 18px"><h1 style="font-size:28px">'+esc(S.blockMsg||"Contact developer for guidance")+'</h1><p class="sub" style="margin:12px 0 20px">Signed in as '+esc(S.user.email)+'</p><button class="btn" data-a="out">Sign out</button></div>'}
 // ---------- field scene ----------
 var SC={id:0,mx:.5,tx:.5};
 function scene(){var cv=$("cv");if(!cv)return;var c=cv.getContext("2d"),d=Math.min(2,devicePixelRatio||1),W=cv.clientWidth,H=cv.clientHeight,id=++SC.id;cv.width=W*d;cv.height=H*d;c.setTransform(d,0,0,d,0,0);
@@ -365,9 +371,9 @@ async function boot(){try{window.__step="opening on-device storage";DB=await Pro
   if(s&&s.user){var prev=S.user&&S.user.id;S.user=s.user;S.booted=true;
    if(cached&&cached.id!==s.user.id){await wipe();derive()}
    cached={id:s.user.id,email:s.user.email,user_metadata:s.user.user_metadata};await put("kv",cached,"user");
-   if(prev!==s.user.id){render();kick(0);if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}else render()}
+   await applyAccess();if(prev!==s.user.id){render();kick(0);if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}else render()}
   else if(ev=="SIGNED_OUT"){S.user=null;S.booted=true;render()}
-  else{S.booted=true;if(!S.user&&cached&&!navigator.onLine){S.user=cached}render()}},0)});
+  else{S.booted=true;if(!S.user&&cached&&!navigator.onLine){S.user=cached;await applyAccess()}render()}},0)});
  render()}
 if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
 boot();

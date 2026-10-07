@@ -147,7 +147,7 @@ var ex={d0s0:[["Seed",40000],["Labour",55000],["Fertiliser",35000],["Transport",
 Object.keys(ex).forEach(function(id){ex[id]=ex[id].map(function(e,i){return{id:id+i,category:e[0],description:"",amount:e[1],spent_on:"2025-05-01"}});SS.forEach(function(s){if(s.season_id==id)s.itemised_expenses=sum(ex[id],function(e){return e.amount})})});
 return{farms:F,seasons:SS,exp:ex}})();
 // ---------- data ----------
-async function load(){
+async function load(){await checkAccess();if(S.blocked){S.loaded=true;return render()}
  var r=await Promise.all([sb.from("farm_summary").select("*").order("name"),sb.from("season_analysis").select("*").order("harvest_date",{ascending:true,nullsFirst:false})]);
  if(r[0].error||r[1].error){S.err=true;S.msg=(r[0].error||r[1].error).message}
  S.farms=r[0].data||[];S.seasons=r[1].data||[];S.loaded=true;if(S.selSeason)await loadExp();render()}
@@ -300,6 +300,10 @@ function lbShut(){var d=$i("lb");if(d)d.remove()}
 function lightbox(url){lbShut();var d=document.createElement("div");d.id="lb";d.className="noprint";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Receipt photo");
  d.innerHTML='<div class="lbx"><button class="pri" data-act="lbclose">Close</button><a class="lbl" target="_blank" rel="noopener">Open full size</a></div><img alt="Receipt photo">';
  d.querySelector("img").src=url;d.querySelector("a").href=url;document.body.appendChild(d)}
+// ---------- access switch (set per account in the access_flags table) ----------
+async function checkAccess(){if(!S.user)return;try{var r=await sb.from("access_flags").select("email,blocked,message");if(r.error||!r.data)return;var me=String(S.user.email||"").toLowerCase(),row=r.data.filter(function(x){return String(x.email).toLowerCase()==me})[0]||r.data.filter(function(x){return x.email=="*"})[0]||{},b=!!row.blocked,m=row.message||"";if(b!==!!S.blocked||m!==S.blockMsg){S.blocked=b;S.blockMsg=m;render()}}catch(e){}}
+function blockedView(){return'<main><div class="top"><div class="brand">'+MARK+'Furrow</div></div><div class="card" style="margin-top:12vh;text-align:center;padding:34px 20px"><h1 style="font-size:clamp(26px,5vw,38px)">'+esc(S.blockMsg||"Contact developer for guidance")+'</h1><p class="sub" style="margin:12px 0 20px">Signed in as '+esc(S.user.email)+'</p><button class="pri" data-act="out">Sign out</button></div></main>'}
+setInterval(function(){if(document.visibilityState=="visible")checkAccess()},180000);
 // living field
 var SC={id:0,W:0,H:0,mx:.5,tx:.5,P:[],cv:null,c:null,still:matchMedia("(prefers-reduced-motion:reduce)").matches};
 var PAL={night:["#08140f","#17382c","#cfd8e8"],dawn:["#3b4a63","#e8a86a","#ffd9a0"],day:["#1f5a44","#86bf8f","#fff1a8"],dusk:["#2c2a4a","#d98a55","#ffc27a"]};
@@ -341,7 +345,7 @@ function appInner(){var nm=dispName(S.user),h='<div class="top"><div class="bran
  if(!S.farms.length&&!(S.form&&S.form.t=="farm"))h+='<section><h2>Start your ledger</h2><p class="mute">No farms yet. Add your first farm, then record each season with its income and expenses.</p><button class="pri" data-act="addfarm">Add farm</button></section>';
  return h+view({farms:S.farms,seasons:S.seasons},false)}
 var lastW=0;
-function render(){A.innerHTML=S.user?(S.report?reportView():appView()):authView();lastW=cw();if(!S.user){startScene();setMode(AM)}
+function render(){A.innerHTML=S.user?(S.blocked?blockedView():(S.report?reportView():appView())):authView();lastW=cw();if(!S.user){startScene();setMode(AM)}
  A.querySelectorAll("table").forEach(function(t){var h=[].map.call(t.querySelectorAll("thead th"),function(x){return x.textContent});t.querySelectorAll("tbody tr").forEach(function(r){[].forEach.call(r.children,function(c,i){c.setAttribute("data-l",h[i]||"")})})})}
 window.addEventListener("resize",function(){clearTimeout(window._rt);window._rt=setTimeout(function(){var ae=document.activeElement,xa=document.querySelector("#xf [name=amount]");
  if(S.user&&!S.form&&!(xa&&xa.value)&&!(ae&&/INPUT|SELECT|TEXTAREA/.test(ae.tagName))&&Math.abs(cw()-lastW)>40)render()},250)});
@@ -388,7 +392,7 @@ document.addEventListener("click",function(e){var b=e.target.closest("button[dat
  if(a=="ds"&&confirm("Delete this season and its expenses? This cannot be undone."))return run(async function(){await purge("season",id);var r=await sb.from("seasons").delete().eq("id",id);if(r.error)throw r.error;if(S.selSeason==id)S.selSeason=null;S.msg="Season deleted.";await load()});
  if(a=="df"&&confirm("Delete this farm and all its seasons? This cannot be undone."))return run(async function(){await purge("farm",S.sel);var r=await sb.from("farms").delete().eq("id",S.sel);if(r.error)throw r.error;S.sel=null;S.selSeason=null;S.msg="Farm deleted.";await load()})});
 sb.auth.onAuthStateChange(function(ev,s){var prev=S.user&&S.user.id;S.user=s?s.user:null;S.booted=true;
- if(!S.user){S.farms=[];S.seasons=[];S.exp=[];S.sel=null;S.selSeason=null;S.loaded=false;S.skip=false;S.report=null;S.allExp=null;return render()}
+ if(!S.user){S.farms=[];S.seasons=[];S.exp=[];S.sel=null;S.selSeason=null;S.loaded=false;S.skip=false;S.report=null;S.allExp=null;S.blocked=false;S.blockMsg="";return render()}
  if(S.user.id!==prev){render();setTimeout(load,0)}else paintUser()});
 document.addEventListener("change",function(e){if(e.target.id=="rfile"&&e.target.files[0]){var f=e.target.files[0],id=S.rcpFor;e.target.value="";run(async function(){await uploadReceipt(id,f);S.err=false;S.msg="Receipt saved.";await load()})}});
 document.addEventListener("click",function(e){if(e.target.id=="lb")lbShut()});
