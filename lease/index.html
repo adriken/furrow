@@ -673,7 +673,7 @@ function authView(msg,mode){
  $("#main").innerHTML='<div class="auth"><div class="authcard"><div style="display:flex;justify-content:center">'+mark(64)+'</div><h1>Furrow Leases</h1><p class="sub" style="text-align:center;margin:6px 0 18px">Every lease, harvest and shilling in one place.</p>'+
  '<form data-form="auth" data-mode="'+mode+'" novalidate>'+fld("Email",'<input name="email" type="email" autocomplete="email" required>')+fld("Password",'<input name="password" type="password" autocomplete="'+(mode==="in"?"current-password":"new-password")+'" required minlength="6">')+
  '<div class="err" id="ae" style="color:var(--loss);margin-bottom:8px;min-height:18px" role="alert">'+esc(msg||"")+'</div><button class="btn block" type="submit">'+(mode==="in"?"Sign in":"Create account")+'</button></form>'+
- '<p class="sub" style="text-align:center;margin:14px 0 0">'+(mode==="in"?"New here?":"Have an account?")+' <button class="linkbtn" data-act="authmode" data-m="'+(mode==="in"?"up":"in")+'">'+(mode==="in"?"Create an account":"Sign in")+'</button></p></div></div>';
+ (matchMedia("(display-mode: standalone)").matches?"":'<p style="text-align:center;margin:16px 0 0"><a href="install.html" style="font-weight:700">Get the Android app</a></p>')+'<p class="sub" style="text-align:center;margin:14px 0 0">'+(mode==="in"?"New here?":"Have an account?")+' <button class="linkbtn" data-act="authmode" data-m="'+(mode==="in"?"up":"in")+'">'+(mode==="in"?"Create an account":"Sign in")+'</button></p></div></div>';
 }
 function blockedView(m){
  document.querySelector(".app").classList.add("authmode");document.querySelector("#bottom").hidden=true;
