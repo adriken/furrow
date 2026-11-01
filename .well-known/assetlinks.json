@@ -1,8 +1,26 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.vercel.furrow_dxnv.twa",
-        "sha256_cert_fingerprints": ["B0:70:B3:78:99:9E:E0:6B:07:60:E7:92:00:4F:69:A6:81:64:BE:E8:D7:88:2C:F1:64:26:DC:52:3D:7D:D2:A1"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.furrow_dxnv.twa",
+      "sha256_cert_fingerprints": [
+        "B0:70:B3:78:99:9E:E0:6B:07:60:E7:92:00:4F:69:A6:81:64:BE:E8:D7:88:2C:F1:64:26:DC:52:3D:7D:D2:A1"
+      ]
+    }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.furrow_dxnv.lease",
+      "sha256_cert_fingerprints": [
+        "B6:76:5E:8F:C5:EF:A3:ED:34:D8:34:15:95:C2:02:77:E8:0A:DC:4F:8F:FD:DA:A3:E9:D6:2F:FA:FF:B2:64:F1"
+      ]
+    }
+  }
+]
