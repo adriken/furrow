@@ -271,13 +271,7 @@ const ic=n=>'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="'+IC
 const mark=w=>'<svg width="'+w+'" height="'+w+'" viewBox="0 0 32 32" aria-hidden="true"><use href="#mk"/></svg>';
 
 /* ---------- crop knowledge: typical days from planting to first harvest ---------- */
-const CROPS={
- "Maize":{days:120,unit:"bags"},"Beans":{days:90,unit:"bags"},"Tomatoes":{days:100,unit:"crates"},
- "Irish potatoes":{days:110,unit:"bags"},"Sorghum":{days:125,unit:"bags"},"Wheat":{days:130,unit:"bags"},
- "Onions":{days:120,unit:"bags"},"Cabbage":{days:85,unit:"heads"},"Kale (sukuma)":{days:55,unit:"bags"},
- "Sweet potatoes":{days:120,unit:"bags"},"Sunflower":{days:110,unit:"bags"},"Green grams":{days:70,unit:"bags"},
- "Cowpeas":{days:80,unit:"bags"},"Rice":{days:135,unit:"bags"},"Sugarcane":{days:450,unit:"tonnes"},"Bananas":{days:330,unit:"bunches"}
-};
+const CROPS={};/* no preset crops: the owner types their own */
 const CATS={Seed:"#7a9a3a",Labour:"#2e7d4f",Fertiliser:"#e0a800",Pesticide:"#b3412f",Transport:"#5d6f60",Water:"#3a7ca5",Equipment:"#8a6d3b",Other:"#9aa79c"};
 
 /* ---------- state + sample data ---------- */
@@ -286,7 +280,9 @@ let USER=null,OUT=[],ONLINE=navigator.onLine,SYNCING=false;
 
 /* ---------- domain logic ---------- */
 const lease=id=>S.leases.find(l=>l.id===id);
-const cycleOf=l=>l.cycle>0?l.cycle:(CROPS[l.crop]?CROPS[l.crop].days:0);
+const cycleOf=l=>l.cycle>0?l.cycle:0;
+const myCrops=()=>[...new Set(S.leases.map(l=>l.crop).concat(S.harvests.map(h=>h.crop)).filter(Boolean))];
+const cropInput=v=>'<input name="crop" list="mycrops" value="'+esc(v||'')+'" autocomplete="off" placeholder="Type the crop"><datalist id="mycrops">'+myCrops().map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist>';
 const hOf=id=>S.harvests.filter(h=>h.lease===id).sort((a,b)=>a.date<b.date?-1:1);
 const eOf=id=>S.expenses.filter(e=>e.lease===id).sort((a,b)=>a.date<b.date?1:-1);
 function daysLeft(l){return diff(TODAY,l.end)}
@@ -416,7 +412,7 @@ function detail(id){
   (bad?'<p style="margin-top:10px;color:#ffd9d1"><b>Heads up:</b> this is '+diff(l.end,p.mid)+' days after the lease ends on '+fmt(l.end)+'. Renew the lease or harvest early.</p>':cf===1?'<p style="margin-top:10px;color:#f6e7b0"><b>Close call:</b> a late harvest could pass the lease end.</p>':"")+
   '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn sm gold" data-act="harvest" data-id="'+l.id+'">'+ic("wheat")+'Record harvest</button><button class="btn sm" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)" data-act="plant" data-id="'+l.id+'">Change crop</button></div></div>';
  }else{
-  h+='<div class="card empty"><b>No crop on this land</b>Record what you plant and Furrow predicts the harvest.<div style="margin-top:12px"><button class="btn pri" data-act="plant" data-id="'+l.id+'">'+ic("sprout")+'Plant a crop</button></div></div>';
+  h+='<div class="card empty"><b>No crop on this land</b>Add what you plant and the days it takes to harvest, and Furrow predicts the harvest.<div style="margin-top:12px"><button class="btn pri" data-act="plant" data-id="'+l.id+'">'+ic("sprout")+'Plant a crop</button></div></div>';
  }
  h+='</div><div><div class="tabs" role="tablist">'+["harvests","expenses","money"].map(t=>'<button role="tab" aria-selected="'+(S.tab===t)+'" data-tab="'+t+'">'+({harvests:"Harvests",expenses:"Expenses",money:"Money"})[t]+'</button>').join("")+'</div><div class="card">'+detailTab(l,s)+'</div>';
  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn sm" data-act="csvlease" data-id="'+l.id+'">'+ic("down")+'Statement (CSV)</button><button class="btn sm" data-act="printlease" data-id="'+l.id+'">'+ic("print")+'Print statement</button></div></div></div>';
@@ -476,8 +472,8 @@ function leaseForm(id){
   '<div class="two">'+fld("Lease starts",'<input type="date" name="start" value="'+l.start+'" required>')+fld("Lease ends",'<input type="date" name="end" value="'+l.end+'" required>')+'</div>'+
   '<div class="quick" style="margin:-6px 0 12px" aria-label="Set lease length"><button type="button" data-len="6">6 months</button><button type="button" data-len="12">1 year</button><button type="button" data-len="24">2 years</button><button type="button" data-len="36">3 years</button></div>'+
   fld("Lease paid per year (KES)",'<input name="rent" inputmode="numeric" value="'+esc(l.rent)+'" required placeholder="0">')+
-  '<div class="two">'+fld("Crop planted",'<select name="crop"><option value="">None yet</option>'+opts(Object.keys(CROPS),l.crop)+'</select>')+fld("Date planted",'<input type="date" name="planted" value="'+(l.planted||"")+'">')+'</div>'+
-  fld("Days to harvest",'<input name="cycle" inputmode="numeric" value="'+(l.cycle||"")+'" placeholder="Leave blank to use the usual time">','Only change this if you know your variety or rainfall makes it shorter or longer.')+
+  '<div class="two">'+fld("Crop planted",cropInput(l.crop),"Leave blank if nothing is planted yet.")+fld("Date planted",'<input type="date" name="planted" value="'+(l.planted||"")+'">')+'</div>'+
+  fld("Days from planting to harvest",'<input name="cycle" inputmode="numeric" value="'+(l.cycle||"")+'" placeholder="For example, 120">','Furrow uses this to predict your harvest. You know your crop best.')+
   '<div class="preview" id="lfp" aria-live="polite"></div><div class="err" id="lfe" style="color:var(--loss);margin-bottom:8px"></div>'+
   '<button class="btn pri block" type="submit">'+(id?"Save changes":"Save lease")+'</button></form>');
  lfPreview();
@@ -499,7 +495,9 @@ function saveLease(f){
  if(!(num(v.acres)>0)){err.textContent="Enter the acres as a number.";return}
  if(!v.start||!v.end||v.end<=v.start){err.textContent="The end date must be after the start date.";return}
  if(!(num(v.rent)>=0)||v.rent===""){err.textContent="Enter the yearly lease amount.";return}
- if(v.crop&&!v.planted){err.textContent="Add the date you planted "+v.crop+", or choose None yet.";return}
+ v.crop=(v.crop||"").trim();
+ if(v.crop&&!v.planted){err.textContent="Add the date you planted "+v.crop+", or clear the crop.";return}
+ if(v.crop&&!(parseInt(v.cycle)>0)){err.textContent="Add the days from planting to harvest so Furrow can predict the harvest.";return}
  const o={name:v.name.trim(),owner:v.owner.trim(),phone:v.phone.trim(),loc:v.loc.trim(),acres:num(v.acres),agreed:v.agreed||TODAY,start:v.start,end:v.end,rent:num(v.rent),crop:v.crop,planted:v.crop?v.planted:"",cycle:parseInt(v.cycle)||0};
  if(id)Object.assign(lease(id),o);else{o.id=uuid();S.leases.push(o)}commit('leases',lease(id||o.id));
  closeSheet();toast(id?"Changes saved":"Lease saved");
@@ -516,7 +514,7 @@ function renewForm(id){
 function harvestForm(id){
  const l=lease(id),u=(CROPS[l.crop]||{}).unit||"bags";
  open("Record harvest",'<form data-form="harvest" data-id="'+id+'" novalidate><p class="sub" style="margin-top:0">'+esc(l.name)+'</p>'+
-  '<div class="two">'+fld("Date harvested",'<input type="date" name="date" value="'+TODAY+'" required>')+fld("Crop",'<select name="crop">'+opts(Object.keys(CROPS),l.crop||"Maize")+'</select>')+'</div>'+
+  '<div class="two">'+fld("Date harvested",'<input type="date" name="date" value="'+TODAY+'" required>')+fld("Crop",cropInput(l.crop))+'</div>'+
   '<div class="two">'+fld("Quantity",'<input name="qty" inputmode="decimal" required placeholder="0">')+fld("Unit",'<input name="unit" value="'+esc(u)+'">')+'</div>'+
   fld("Income from this harvest (KES)",'<input name="income" inputmode="numeric" placeholder="0">','Leave blank if you have not sold it yet.')+
   fld("Note",'<input name="note" placeholder="Optional">')+
@@ -535,9 +533,9 @@ function expenseForm(id){
 function plantForm(id){
  const l=lease(id);
  open("Plant a crop",'<form data-form="plant" data-id="'+id+'"><p class="sub" style="margin-top:0">'+esc(l.name)+'</p>'+
-  fld("Crop",'<select name="crop">'+opts(Object.keys(CROPS),l.crop||"Maize")+'</select>')+fld("Date planted",'<input type="date" name="planted" value="'+(l.planted||TODAY)+'" required>')+
-  fld("Days to harvest",'<input name="cycle" inputmode="numeric" placeholder="Usual time for this crop">')+
-  '<button class="btn pri block" type="submit">Save and predict harvest</button></form>');
+  fld("Crop",cropInput(l.crop))+fld("Date planted",'<input type="date" name="planted" value="'+(l.planted||TODAY)+'" required>')+
+  fld("Days from planting to harvest",'<input name="cycle" inputmode="numeric" value="'+(l.cycle||"")+'" placeholder="For example, 120" required>')+
+  '<div class="err" id="pfe" style="color:var(--loss);margin-bottom:8px"></div><button class="btn pri block" type="submit">Save and predict harvest</button></form>');
 }
 function alertsSheet(){
  const al=alerts();
@@ -733,14 +731,14 @@ document.addEventListener("submit",async e=>{
  if(k==="lease")return saveLease(f);
  if(k==="renew"){const l=lease(id);if(v.end<=l.end&&l.end>=TODAY){toast("Pick a date after "+fmt(l.end));return}l.end=v.end;l.rent=num(v.rent)||l.rent;commit('leases',l);closeSheet();render();toast("Lease renewed to "+fmt(l.end));return}
  if(k==="harvest"){if(!(num(v.qty)>0)){$("#hfe").textContent="Enter the quantity harvested.";return}
-  const hv={id:uuid(),lease:id,date:v.date,crop:v.crop,qty:num(v.qty),unit:v.unit||"bags",income:num(v.income)||0,note:v.note||""};S.harvests.push(hv);commit("harvests",hv);
+  const hv={id:uuid(),lease:id,date:v.date,crop:(v.crop||'').trim()||'Crop',qty:num(v.qty),unit:v.unit||"bags",income:num(v.income)||0,note:v.note||""};S.harvests.push(hv);commit("harvests",hv);
   const l=lease(id);if(v.done){l.planted="";commit("leases",l)}
   closeSheet();render();const p=predict(l);toast(p&&!p.planted?"Saved. Next harvest about "+fmtS(p.mid):"Harvest saved");return}
  if(k==="expense"){if(!(num(v.amount)>0)){$("#efe").textContent="Enter the amount spent.";return}
   const file=f.querySelector("[name=receipt]").files[0],r=file?await shrink(file):"";
   const ex={id:uuid(),lease:id,date:v.date,cat:v.cat,desc:v.desc||"",amount:num(v.amount),receipt:r,rpath:""};S.expenses.push(ex);commit("expenses",ex);
   S.tab="expenses";closeSheet();render();toast("Expense saved");return}
- if(k==="plant"){const l=lease(id);l.crop=v.crop;l.planted=v.planted;l.cycle=parseInt(v.cycle)||0;commit('leases',l);closeSheet();render();const p=predict(l);toast("Harvest predicted for about "+fmtS(p.mid));return}
+ if(k==="plant"){const cy=parseInt(v.cycle),cr=(v.crop||"").trim();if(!cr||!(cy>0)){$("#pfe").textContent="Enter the crop and the days from planting to harvest.";return}const l=lease(id);v.crop=cr;l.crop=v.crop;l.planted=v.planted;l.cycle=parseInt(v.cycle)||0;commit('leases',l);closeSheet();render();const p=predict(l);toast(p?"Harvest predicted for about "+fmtS(p.mid):"Saved");return}
 });
 boot();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
