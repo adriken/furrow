@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Furrow Leases</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
+<meta name="theme-color" content="#17301f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317301f'/%3E%3Cpath d='M16 22V8' stroke='%23e0a800' stroke-width='2' stroke-linecap='round'/%3E%3Cellipse cx='13' cy='12' rx='2.2' ry='4' transform='rotate(-25 13 12)' fill='%23e0a800'/%3E%3Cellipse cx='19' cy='12' rx='2.2' ry='4' transform='rotate(25 19 12)' fill='%23e0a800'/%3E%3Cellipse cx='16' cy='8' rx='2' ry='3.4' fill='%23e0a800'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#eef2ea;--panel:#fbfcf8;--ink:#17301f;--mute:#5d6f60;--line:#cfd9c9;--gain:#2e7d4f;--loss:#b3412f;--gold:#e0a800;--gold-soft:#f6e7b0;--loss-soft:#f3d9d2;--gain-soft:#d9eadd;--shadow:0 1px 2px rgba(23,48,31,.06),0 8px 24px rgba(23,48,31,.07)}
+@media(prefers-color-scheme:dark){:root{--bg:#101a13;--panel:#17251b;--ink:#e8efe2;--mute:#9fb2a2;--line:#2c4032;--gain:#5cc58a;--loss:#e07a66;--gold:#f0c24a;--gold-soft:#4a3d12;--loss-soft:#4a2a24;--gain-soft:#1f3a29;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25)}}
+*,*:before,*:after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;margin:0;line-height:1.12;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+[hidden]{display:none!important}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* shell */
+.app{display:grid;grid-template-columns:1fr;min-height:100dvh}
+.side{display:none}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand b{font:800 22px Fraunces,Georgia,serif;letter-spacing:-.02em}
+.brand small{display:block;font-size:11px;color:var(--mute);margin-top:-2px}
+main{padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px));max-width:1120px;width:100%;margin:0 auto}
+.iconbtn{position:relative;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center}
+.dot{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--loss);color:#fff;font:700 12px/20px "DM Sans";text-align:center}
+
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));background:var(--panel);border-top:1px solid var(--line)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;padding:6px 0;font-size:12px;color:var(--mute);min-height:52px;position:relative}
+.tab[aria-current=page]{color:var(--ink);font-weight:700}
+.tab[aria-current=page]:after{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:2px;background:var(--gold)}
+.fab{justify-self:center;width:58px;height:58px;margin-top:-26px;border-radius:50%;border:4px solid var(--bg);background:var(--ink);color:var(--bg);display:grid;place-items:center;box-shadow:var(--shadow)}
+.fab svg{width:26px;height:26px}
+.tab .dot{top:2px;right:calc(50% - 26px)}
+
+@media(min-width:960px){
+ .app{grid-template-columns:260px 1fr}
+ .top,.bottom{display:none}
+ main{padding:36px 40px 56px}
+ .side{display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100dvh;padding:24px 16px;background:var(--ink);color:#e8efe2}
+ .side .brand b{color:#fff}.side .brand small{color:#9fb2a2}
+ .side nav{display:flex;flex-direction:column;gap:4px;margin-top:28px}
+ .nav{display:flex;align-items:center;gap:12px;border:0;background:none;color:#c8d6c8;padding:11px 12px;border-radius:12px;text-align:left;font-weight:500;position:relative}
+ .nav:hover{background:rgba(255,255,255,.07)}
+ .nav[aria-current=page]{background:rgba(255,255,255,.12);color:#fff;font-weight:700}
+ .nav .dot{position:static;margin-left:auto}
+ .side .newbtn{margin-top:auto}
+ .side .foot{font-size:12px;color:#9fb2a2;margin-top:12px}
+}
+
+/* type + bits */
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:4px 0 16px;flex-wrap:wrap}
+.pagehead h1{font-size:clamp(26px,4vw,38px)}
+.sub{color:var(--mute);font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:10px 16px;min-height:46px;font-weight:700;text-decoration:none}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.gold{background:var(--gold);color:#17301f;border-color:var(--gold)}
+.btn.sm{min-height:38px;padding:6px 12px;font-size:14px;border-radius:10px}
+.btn.block{width:100%}
+.btn.danger{color:var(--loss)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:13px;font-weight:700;background:var(--gain-soft);color:var(--gain);white-space:nowrap}
+.chip.warn{background:var(--gold-soft);color:#7a5a00}
+.chip.bad{background:var(--loss-soft);color:var(--loss)}
+.chip.quiet{background:transparent;border:1px solid var(--line);color:var(--mute)}
+@media(prefers-color-scheme:dark){.chip.warn{color:var(--gold)}}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.kpi span{display:block;font-size:13px;color:var(--mute)}
+.kpi b{display:block;font:700 24px Fraunces,Georgia,serif;margin-top:2px;letter-spacing:-.01em}
+.kpi b.neg{color:var(--loss)}.kpi b.pos{color:var(--gain)}
+@media(min-width:720px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.sect{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 10px}
+.sect h2{font-size:21px}
+.grid2{display:grid;gap:14px}
+@media(min-width:760px){.grid2{grid-template-columns:1fr 1fr}}
+
+/* alert banner */
+.banner{display:flex;gap:12px;align-items:flex-start;border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid;background:var(--gold-soft);border-color:#e6cd73}
+.banner.bad{background:var(--loss-soft);border-color:#e3b3a8}
+.banner .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--gold);color:#17301f;flex:none}
+.banner.bad .ic{background:var(--loss);color:#fff}
+.banner h3{font:700 17px "DM Sans";letter-spacing:0}
+.banner p{margin:2px 0 8px;font-size:14.5px}
+.banner .row{display:flex;gap:8px;flex-wrap:wrap}
+@media(prefers-color-scheme:dark){.banner{border-color:#6b5a1e}.banner.bad{border-color:#7a4237}}
+
+/* lease card */
+.lease{cursor:pointer;display:block;text-decoration:none;transition:transform .15s,box-shadow .15s}
+.lease:hover{transform:translateY(-2px)}
+.lease .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.lease h3{font-size:19px}
+.lease .meta{font-size:14px;color:var(--mute);margin-top:2px}
+.lease .ft{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;margin-top:12px;font-size:14px}
+.lease .ft span{display:block;color:var(--mute);font-size:12.5px}
+.lease .ft b{font-weight:700}
+
+/* THE TERM STRIP */
+.term{position:relative;margin:16px 0 30px}
+.term .track{position:relative;height:30px;border-radius:9px;background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(179,65,47,.18) 6px 8px);border:1px solid var(--line);overflow:hidden}
+.term .span{position:absolute;top:0;bottom:0;left:0;background:var(--bg);border-right:2px solid var(--ink)}
+.term .gone{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(90deg,#2e7d4f,#58a173)}
+.term .zone{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,rgba(224,168,0,.0) 0 5px,rgba(224,168,0,.55) 5px 7px)}
+.term .zone.hot{background:repeating-linear-gradient(135deg,rgba(179,65,47,0) 0 5px,rgba(179,65,47,.7) 5px 7px)}
+.term .pred{position:absolute;top:5px;bottom:5px;border-radius:6px;background:repeating-linear-gradient(45deg,var(--gold) 0 4px,#f7d96a 4px 8px);border:1.5px solid #8a6700;box-shadow:0 0 0 2px var(--panel)}
+.term .pred.over{border-color:var(--loss);background:repeating-linear-gradient(45deg,#e8a090 0 4px,#f3c8bd 4px 8px)}
+.term .hv{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--gold);border:2.5px solid var(--panel);box-shadow:0 0 0 1.5px #8a6700}
+.term .now{position:absolute;top:-7px;bottom:-7px;width:3px;margin-left:-1.5px;background:var(--ink);border-radius:2px}
+.term .now:before{content:"Today";position:absolute;top:-17px;left:50%;transform:translateX(-50%);font:700 11px "DM Sans";color:var(--ink);white-space:nowrap}
+.term .lbl{position:absolute;top:36px;font-size:12px;color:var(--mute);white-space:nowrap}
+.term .lbl.r{transform:translateX(-100%)}
+.term .lbl.c{transform:translateX(-50%);color:#7a5a00;font-weight:700}
+@media(prefers-color-scheme:dark){.term .lbl.c{color:var(--gold)}}
+.term.big .track{height:40px;border-radius:12px}
+.term.big{margin:26px 0 56px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute);margin:-14px 0 8px}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* next events */
+.ev{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .when{width:54px;text-align:center;flex:none;line-height:1.1}
+.ev .when b{display:block;font:800 22px Fraunces,Georgia,serif}
+.ev .when span{font-size:12px;color:var(--mute)}
+.ev .t{flex:1;min-width:0}.ev .t b{display:block}.ev .t span{font-size:13.5px;color:var(--mute)}
+.tag{width:10px;height:10px;border-radius:50%;flex:none}
+
+/* detail */
+.back{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:6px 0;color:var(--mute);font-weight:500;margin-bottom:6px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}
+.facts span{display:block;font-size:12.5px;color:var(--mute)}
+.facts b{font-weight:700}
+.detail{display:grid;gap:14px}
+@media(min-width:960px){.detail{grid-template-columns:5fr 6fr;align-items:start}}
+.predcard{background:var(--ink);color:#e8efe2;border-radius:16px;padding:16px 18px;position:relative;overflow:hidden}
+.predcard h3{font:600 14px "DM Sans";color:#b7c9b8;letter-spacing:0}
+.predcard .big{font:800 clamp(28px,5vw,36px) Fraunces,Georgia,serif;margin:4px 0 2px;color:#fff}
+.predcard p{margin:4px 0 0;font-size:14px;color:#c8d6c8}
+.predcard.bad{background:#5a2218}
+.predcard .meter{height:8px;border-radius:4px;background:rgba(255,255,255,.18);margin:12px 0 6px;overflow:hidden}
+.predcard .meter i{display:block;height:100%;background:var(--gold);border-radius:4px}
+.tabs{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:12px;border:1px solid var(--line);margin-bottom:12px}
+.tabs button{flex:1;border:0;background:none;border-radius:9px;padding:9px 6px;font-weight:700;color:var(--mute);min-height:40px}
+.tabs button[aria-selected=true]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.row2{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.row2:last-child{border-bottom:0}
+.row2 .l{flex:1;min-width:0}.row2 .l b{display:block;overflow:hidden;text-overflow:ellipsis}.row2 .l span{font-size:13px;color:var(--mute)}
+.row2 .amt{font-weight:700;white-space:nowrap}
+.xbtn{border:0;background:none;color:var(--mute);width:36px;height:36px;border-radius:10px;display:grid;place-items:center}
+.xbtn:hover{background:var(--loss-soft);color:var(--loss)}
+.stack{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:6px 0 10px;background:var(--line)}
+.cats{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-bottom:6px}
+.cats i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.money .line{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}
+.money .line.tot{border-bottom:0;font:700 20px Fraunces,Georgia,serif;padding-top:12px}
+.empty{text-align:center;padding:22px 10px;color:var(--mute)}
+.empty b{display:block;color:var(--ink);margin-bottom:4px}
+
+/* reports */
+.dl{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.dl:last-child{border-bottom:0}
+.dl .l{flex:1}.dl .l b{display:block}.dl .l span{font-size:13.5px;color:var(--mute)}
+table.rep{width:100%;border-collapse:collapse;font-size:14px}
+table.rep th{text-align:left;font-weight:700;color:var(--mute);font-size:12.5px;padding:8px 8px 8px 0;border-bottom:2px solid var(--ink)}
+table.rep td{padding:9px 8px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+table.rep .n{text-align:right;white-space:nowrap}
+.scroll{overflow-x:auto}
+
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:50;display:none}
+#sheet.on{display:block}
+#sheet .bd{position:absolute;inset:0;background:rgba(10,24,15,.5)}
+#sheet .pn{position:absolute;left:0;right:0;bottom:0;max-height:92dvh;overflow:auto;background:var(--panel);border-radius:22px 22px 0 0;padding:8px 18px calc(22px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+#sheet .grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 10px}
+#sheet .sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;position:sticky;top:0;background:var(--panel);padding:4px 0;z-index:2}
+#sheet h2{font-size:23px}
+@media(min-width:760px){#sheet .pn{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:560px;border-radius:22px;animation:none}}
+.fld{display:block;margin-bottom:12px}
+.fld>span{display:block;font-size:14px;font-weight:700;margin-bottom:4px}
+.fld small{display:block;color:var(--mute);font-size:12.5px;margin-top:3px}
+.fld input,.fld select,.fld textarea{width:100%;border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;min-height:48px;outline-offset:1px}
+.fld input:focus,.fld select:focus{border-color:var(--ink)}
+.fld .err{color:var(--loss);font-size:13px;margin-top:3px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.quick button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700}
+.preview{background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:14px;margin:4px 0 14px}
+.preview b{font-weight:700}
+.preview.warn{border-color:var(--loss);background:var(--loss-soft)}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--bg);width:100%;text-align:left}
+.opt:hover{border-color:var(--ink)}
+.opt .ic{width:40px;height:40px;border-radius:12px;background:var(--ink);color:var(--bg);display:grid;place-items:center;flex:none}
+.opt b{display:block}.opt span{font-size:13.5px;color:var(--mute)}
+.alist .it{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.alist .it .ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none;background:var(--gold);color:#17301f}
+.alist .it.bad .ic{background:var(--loss);color:#fff}
+.alist .it.ok .ic{background:var(--gain-soft);color:var(--gain)}
+.alist .it b{display:block}.alist .it span{font-size:14px;color:var(--mute)}
+.set{background:var(--bg);border-radius:14px;padding:12px 14px;margin-top:14px}
+.rcpt{max-width:100%;border-radius:12px;display:block;margin:8px auto 0}
+#toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:12px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:80;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media(min-width:960px){#toast{bottom:28px}}
+.demo{font-size:12px;text-align:center;color:var(--mute);margin-top:20px}
+
+/* auth + sync */
+.authmode .side,.authmode .top{display:none}.authmode{grid-template-columns:1fr!important}
+.auth{min-height:80dvh;display:grid;place-items:center}.authcard{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:28px 22px;box-shadow:var(--shadow)}
+.authcard h1{text-align:center;font-size:30px;margin-top:10px}
+.or{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:13px;margin:16px 0}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+.linkbtn{border:0;background:none;padding:0;font-weight:700;text-decoration:underline;color:inherit}
+.sync{font-size:12px;color:var(--mute)}.sync[data-s=off]{color:var(--loss);font-weight:700}.sync[data-s=wait]{color:#7a5a00;font-weight:700}.sync.pill{padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+/* print */
+#doc{display:none}
+@media print{
+ body{background:#fff;color:#000}
+ body.printing .app,body.printing #sheet,body.printing #toast{display:none!important}
+ body.printing #doc{display:block;padding:0;font-size:12px}
+ #doc h1{font-size:24px}#doc h2{font-size:15px;margin:16px 0 6px;font-family:"DM Sans",sans-serif}
+ #doc table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:6px}
+ #doc th{text-align:left;border-bottom:1.5px solid #000;padding:4px 6px 4px 0}
+ #doc td{border-bottom:1px solid #ccc;padding:4px 6px 4px 0}
+ #doc .n{text-align:right}
+ #doc .hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #17301f;padding-bottom:8px;margin-bottom:10px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="mk" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#17301f"/><path d="M5 26Q16 20 27 26M5 21Q16 15 27 21" stroke="#e0a800" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/><path d="M16 22V8" stroke="#e0a800" stroke-width="2" stroke-linecap="round"/><ellipse cx="13" cy="12" rx="2.2" ry="4" transform="rotate(-25 13 12)" fill="#e0a800"/><ellipse cx="19" cy="12" rx="2.2" ry="4" transform="rotate(25 19 12)" fill="#e0a800"/><ellipse cx="16" cy="8" rx="2" ry="3.4" fill="#e0a800"/></symbol>
+</defs></svg>
+
+<div class="app">
+ <aside class="side" id="side"></aside>
+ <div>
+  <header class="top" id="top"></header>
+  <main id="main" tabindex="-1"></main>
+ </div>
+</div>
+<nav class="bottom" id="bottom" aria-label="Main"></nav>
+<div id="sheet" role="dialog" aria-modal="true" aria-labelledby="shT"><div class="bd" data-act="close"></div><div class="pn"><div class="grab"></div><div class="sh"><h2 id="shT"></h2><button class="xbtn" data-act="close" aria-label="Close"></button></div><div id="shB"></div></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="doc"></div>
+
+<script src="vendor/supabase.js"></script>
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const D=s=>new Date(s+"T00:00:00");
+const add=(s,n)=>{const d=D(s);d.setDate(d.getDate()+n);return iso(d)};
+const diff=(a,b)=>Math.round((D(b)-D(a))/864e5);
+const TODAY=iso(new Date());
+const fmt=s=>D(s).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+const fmtS=s=>D(s).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+const kes=n=>"KES "+Math.round(n).toLocaleString("en-US");
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const uid=()=>"x"+Math.random().toString(36).slice(2,9);
+const ICO={home:"M3 11l9-8 9 8M5 10v10h14V10",plot:"M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3zM9 4v13M15 7v13",plus:"M12 5v14M5 12h14",chart:"M5 20V10M12 20V4M19 20v-7",bell:"M6 16v-5a6 6 0 0112 0v5l2 2H4zM10 21h4",down:"M12 4v11M7 11l5 5 5-5M5 20h14",print:"M7 8V3h10v5M7 17H4v-7h16v7h-3M7 14h10v7H7z",wheat:"M12 21V9M12 9c-3 0-5-2-5-5 3 0 5 2 5 5zM12 9c3 0 5-2 5-5-3 0-5 2-5 5zM12 15c-3 0-5-2-5-5M12 15c3 0 5-2 5-5",coin:"M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6",cal:"M4 6h16v14H4zM4 10h16M8 3v4M16 3v4",left:"M15 5l-7 7 7 7",x:"M6 6l12 12M18 6L6 18",check:"M5 12l5 5 9-10",trash:"M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13",refresh:"M20 11a8 8 0 10-2 6M20 5v6h-6",cam:"M4 8h4l2-3h4l2 3h4v11H4zM12 17a3.5 3.5 0 100-7 3.5 3.5 0 000 7z",alert:"M12 3l10 18H2zM12 10v5M12 18v.01",sprout:"M12 21v-8M12 13c0-4-3-6-7-6 0 4 3 6 7 6zM12 13c0-3 2-5 6-5 0 3-2 5-6 5"};
+const ic=n=>'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="'+ICO[n]+'"/></svg>';
+const mark=w=>'<svg width="'+w+'" height="'+w+'" viewBox="0 0 32 32" aria-hidden="true"><use href="#mk"/></svg>';
+
+/* ---------- crop knowledge: typical days from planting to first harvest ---------- */
+const CROPS={
+ "Maize":{days:120,unit:"bags"},"Beans":{days:90,unit:"bags"},"Tomatoes":{days:100,unit:"crates"},
+ "Irish potatoes":{days:110,unit:"bags"},"Sorghum":{days:125,unit:"bags"},"Wheat":{days:130,unit:"bags"},
+ "Onions":{days:120,unit:"bags"},"Cabbage":{days:85,unit:"heads"},"Kale (sukuma)":{days:55,unit:"bags"},
+ "Sweet potatoes":{days:120,unit:"bags"},"Sunflower":{days:110,unit:"bags"},"Green grams":{days:70,unit:"bags"},
+ "Cowpeas":{days:80,unit:"bags"},"Rice":{days:135,unit:"bags"},"Sugarcane":{days:450,unit:"tonnes"},"Bananas":{days:330,unit:"bunches"}
+};
+const CATS={Seed:"#7a9a3a",Labour:"#2e7d4f",Fertiliser:"#e0a800",Pesticide:"#b3412f",Transport:"#5d6f60",Water:"#3a7ca5",Equipment:"#8a6d3b",Other:"#9aa79c"};
+
+/* ---------- state + sample data ---------- */
+const S={leases:[],harvests:[],expenses:[],remind:30,tab:"harvests",notify:false};
+let USER=null,OUT=[],ONLINE=navigator.onLine,SYNCING=false;
+
+/* ---------- domain logic ---------- */
+const lease=id=>S.leases.find(l=>l.id===id);
+const cycleOf=l=>l.cycle>0?l.cycle:(CROPS[l.crop]?CROPS[l.crop].days:0);
+const hOf=id=>S.harvests.filter(h=>h.lease===id).sort((a,b)=>a.date<b.date?-1:1);
+const eOf=id=>S.expenses.filter(e=>e.lease===id).sort((a,b)=>a.date<b.date?1:-1);
+function daysLeft(l){return diff(TODAY,l.end)}
+function predict(l){
+ const c=cycleOf(l);if(!l.crop||!c)return null;
+ const sp=Math.max(3,Math.round(c*.08));
+ if(l.planted){const mid=add(l.planted,c);return{mid,lo:add(mid,-sp),hi:add(mid,sp),sp,planted:true,day:clamp(diff(l.planted,TODAY),0,c+60),cycle:c}}
+ const hs=hOf(l.id);if(!hs.length)return null;
+ const mid=add(hs[hs.length-1].date,21+c);
+ return{mid,lo:add(mid,-sp),hi:add(mid,sp),sp,planted:false,cycle:c,replantBy:add(hs[hs.length-1].date,21)}
+}
+function conflict(l,p){if(!p)return 0;if(p.mid>l.end)return 2;if(p.hi>l.end)return 1;return 0}
+function stats(l){
+ const inc=hOf(l.id).reduce((s,h)=>s+h.income,0),sp=eOf(l.id).reduce((s,e)=>s+e.amount,0);
+ const term=Math.max(1,diff(l.start,l.end)),el=clamp(diff(l.start,TODAY),0,term);
+ const rentTo=l.rent*el/365,commit=l.rent*term/365;
+ return{inc,sp,rentTo,commit,net:inc-sp-rentTo,term,el}
+}
+function alerts(){
+ const out=[];
+ S.leases.forEach(l=>{
+  const dl=daysLeft(l),p=predict(l),cf=conflict(l,p);
+  if(dl<0)out.push({sev:3,kind:"bad",id:l.id,title:l.name+" lease has ended",text:"Ended on "+fmt(l.end)+". Renew it or hand the land back.",act:"renew"});
+  else if(dl<=S.remind)out.push({sev:dl<=7?3:2,kind:dl<=7?"bad":"warn",id:l.id,title:"Lease ends in "+dl+" day"+(dl===1?"":"s"),text:l.name+" (owner "+l.owner+") ends on "+fmt(l.end)+".",act:"renew",dl});
+  if(dl>=0&&cf===2)out.push({sev:3,kind:"bad",id:l.id,title:"Harvest falls after the lease ends",text:l.crop+" at "+l.name+" should be ready around "+fmt(p.mid)+", "+diff(l.end,p.mid)+" days after the lease ends. Renew, or plan to harvest early.",act:"renew"});
+  else if(dl>=0&&cf===1)out.push({sev:2,kind:"warn",id:l.id,title:"Harvest may run past the lease",text:l.crop+" at "+l.name+" could finish after "+fmt(l.end)+" if it ripens late.",act:"open"});
+  if(p&&p.planted){const du=diff(TODAY,p.mid);if(du>=-5&&du<=14)out.push({sev:1,kind:"ok",id:l.id,title:du>0?"Harvest due in about "+du+" days":"Harvest is due now",text:l.crop+" at "+l.name+". Expected around "+fmt(p.mid)+".",act:"harvest"})}
+ });
+ return out.sort((a,b)=>b.sev-a.sev);
+}
+function events(days){
+ const ev=[];
+ S.leases.forEach(l=>{
+  const p=predict(l),e=l.end;
+  if(diff(TODAY,e)>=0&&diff(TODAY,e)<=days)ev.push({d:e,c:"#b3412f",t:"Lease ends",s:l.name});
+  const r=add(e,-S.remind);if(diff(TODAY,r)>=0&&diff(TODAY,r)<=days)ev.push({d:r,c:"#e0a800",t:"Lease reminder",s:l.name+" ends in "+S.remind+" days"});
+  if(p&&diff(TODAY,p.mid)>=0&&diff(TODAY,p.mid)<=days)ev.push({d:p.mid,c:"#2e7d4f",t:"Predicted harvest",s:l.crop+" at "+l.name});
+ });
+ return ev.sort((a,b)=>a.d<b.d?-1:1);
+}
+
+/* ---------- the term strip (signature element) ---------- */
+function strip(l,big){
+ const p=predict(l),hs=hOf(l.id);
+ const axisEnd=p&&p.hi>l.end?add(p.hi,Math.max(10,Math.round(diff(l.start,p.hi)*.04))):l.end;
+ const total=Math.max(1,diff(l.start,axisEnd));
+ const pc=d=>clamp(diff(l.start,d)/total*100,0,100);
+ const pe=pc(l.end),pn=pc(TODAY),zs=pc(add(l.end,-S.remind));
+ const hot=daysLeft(l)<=S.remind&&daysLeft(l)>=0;
+ let h='<div class="term'+(big?" big":"")+'" role="img" aria-label="Lease from '+fmt(l.start)+' to '+fmt(l.end)+', '+daysLeft(l)+' days left"><div class="track">';
+ h+='<div class="span" style="width:'+pe+'%"></div>';
+ h+='<div class="gone" style="width:'+Math.min(pn,pe)+'%"></div>';
+ h+='<div class="zone'+(hot?" hot":"")+'" style="left:'+zs+'%;width:'+(pe-zs)+'%"></div>';
+ if(p){const over=conflict(l,p)>0;h+='<div class="pred'+(over?" over":"")+'" style="left:'+pc(p.lo)+'%;width:'+Math.max(1.5,pc(p.hi)-pc(p.lo))+'%" title="Predicted harvest"></div>'}
+ hs.forEach(x=>{if(x.date>=l.start)h+='<div class="hv" style="left:'+pc(x.date)+'%" title="Harvested '+fmt(x.date)+'"></div>'});
+ if(pn<=100)h+='<div class="now" style="left:'+pn+'%"></div>';
+ h+='</div>';
+ h+='<span class="lbl" style="left:0">'+fmtS(l.start)+'</span>';
+ h+='<span class="lbl r" style="left:'+pe+'%">Ends '+fmtS(l.end)+'</span>';
+ if(p&&big)h+='<span class="lbl c" style="left:'+clamp(pc(p.mid),12,88)+'%;top:54px">~'+fmtS(p.mid)+'</span>';
+ return h+'</div>';
+}
+function legend(){return '<div class="legend"><span><i style="background:#2e7d4f"></i>Time used</span><span><i style="background:repeating-linear-gradient(135deg,#e0a800 0 3px,#fff 3px 5px)"></i>Reminder window</span><span><i style="background:#e0a800"></i>Harvested</span><span><i style="background:repeating-linear-gradient(45deg,#e0a800 0 4px,#f7d96a 4px 8px)"></i>Predicted harvest</span></div>'}
+function chipFor(l){
+ const d=daysLeft(l);
+ if(d<0)return '<span class="chip bad">Ended</span>';
+ if(d<=7)return '<span class="chip bad">Ends in '+d+' day'+(d===1?"":"s")+'</span>';
+ if(d<=S.remind)return '<span class="chip warn">Ends in '+d+' days</span>';
+ return '<span class="chip">'+(d>=60?Math.round(d/30.4)+' months left':d+' days left')+'</span>';
+}
+
+/* ---------- chrome ---------- */
+function route(){const h=location.hash.replace(/^#\/?/,"").split("/");return{s:h[0]||"home",id:h[1]}}
+function go(h){if(location.hash==="#/"+h)render();else location.hash="#/"+h}
+function chrome(r){
+ const n=alerts().filter(a=>a.sev>=2).length;
+ const cur=r.s==="lease"?"leases":r.s;
+ const items=[["home","Home","home"],["leases","Leases","plot"],["reports","Reports","chart"]];
+ $("#side").innerHTML='<a class="brand" href="#/home">'+mark(40)+'<span><b>Furrow</b><small>Land lease manager</small></span></a><nav aria-label="Main">'+
+  items.map(i=>'<button class="nav" data-go="'+i[0]+'"'+(cur===i[0]?' aria-current="page"':"")+'>'+ic(i[2])+i[1]+'</button>').join("")+
+  '<button class="nav" data-act="alerts">'+ic("bell")+'Alerts'+(n?'<span class="dot">'+n+'</span>':"")+'</button></nav>'+
+  '<button class="btn gold newbtn" data-act="newmenu">'+ic("plus")+'Add new</button><div class="foot"><button class="linkbtn" style="color:#c8d6c8" data-act="account">'+esc(USER?USER.email:"")+'</button><br><span class="sync"></span></div>';
+ $("#top").innerHTML='<a class="brand" href="#/home">'+mark(36)+'<span><b>Furrow</b><small>Land lease manager</small></span></a><span style="display:flex;gap:8px;align-items:center"><span class="sync pill"></span><button class="iconbtn" data-act="account" aria-label="Account">'+ic("home").replace(/<path[^>]*>/,'<path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0"/>')+'</button><button class="iconbtn" data-act="alerts" aria-label="Alerts'+(n?', '+n+' need attention':"")+'">'+ic("bell")+(n?'<span class="dot">'+n+'</span>':"")+'</button></span>';
+ setStatus();
+ const t=(k,l,i)=>'<button class="tab" data-go="'+k+'"'+(cur===k?' aria-current="page"':"")+'>'+ic(i)+l+'</button>';
+ $("#bottom").innerHTML=t("home","Home","home")+t("leases","Leases","plot")+'<button class="fab" data-act="newmenu" aria-label="Add new">'+ic("plus")+'</button>'+t("reports","Reports","chart")+'<button class="tab" data-act="alerts">'+ic("bell")+'Alerts'+(n?'<span class="dot">'+n+'</span>':"")+'</button>';
+}
+
+/* ---------- screens ---------- */
+function leaseCard(l){
+ const p=predict(l),s=stats(l);
+ return '<a class="card lease" href="#/lease/'+l.id+'"><div class="hd"><div><h3>'+esc(l.name)+'</h3><div class="meta">'+esc(l.owner)+' · '+l.acres+' acres · '+esc(l.loc)+'</div></div>'+chipFor(l)+'</div>'+strip(l,false)+
+ '<div class="ft"><div><span>Crop</span><b>'+(l.crop?esc(l.crop)+(l.planted?" · day "+p.day+" of "+p.cycle:" · field free"):"None planted")+'</b></div><div><span>Next harvest</span><b>'+(p?"~"+fmt(p.mid):"—")+(conflict(l,p)===2?' <span style="color:var(--loss)">after lease</span>':"")+'</b></div><div><span>Lease per year</span><b>'+kes(l.rent)+'</b></div><div><span>Net so far</span><b style="color:var(--'+(s.net>=0?"gain":"loss")+')">'+(s.net<0?"−":"")+kes(Math.abs(s.net))+'</b></div></div></a>';
+}
+function home(){
+ const al=alerts().filter(a=>a.sev>=2).slice(0,2);
+ const act=S.leases.filter(l=>daysLeft(l)>=0);
+ const acres=act.reduce((s,l)=>s+l.acres,0),rent=act.reduce((s,l)=>s+l.rent,0);
+ const net=S.leases.reduce((s,l)=>s+stats(l).net,0);
+ let h='<div class="pagehead"><div><h1>Your leases</h1><div class="sub">'+D(TODAY).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</div></div></div>';
+ al.forEach(a=>{h+='<div class="banner'+(a.kind==="bad"?" bad":"")+'" role="alert"><div class="ic">'+ic("alert")+'</div><div><h3>'+esc(a.title)+'</h3><p>'+esc(a.text)+'</p><div class="row"><button class="btn sm pri" data-act="'+(a.act==="renew"?"renew":"open")+'" data-id="'+a.id+'">'+(a.act==="renew"?"Renew lease":"Open lease")+'</button><button class="btn sm" data-act="open" data-id="'+a.id+'">View details</button></div></div></div>'});
+ h+='<div class="kpis"><div class="kpi"><span>Active leases</span><b>'+act.length+'</b></div><div class="kpi"><span>Acres under lease</span><b>'+acres+'</b></div><div class="kpi"><span>Lease paid per year</span><b>'+kes(rent)+'</b></div><div class="kpi"><span>Net so far</span><b class="'+(net>=0?"pos":"neg")+'">'+(net<0?"−":"")+kes(Math.abs(net))+'</b></div></div>';
+ if(!S.leases.length)return h.replace(/<div class="kpis">[\s\S]*$/,"")+'<div class="card empty" style="padding:34px 16px"><b style="font:700 22px Fraunces,Georgia,serif">Add your first lease</b>Record the land owner, the dates, the yearly amount and the crop. Furrow will warn you before it ends.<div style="margin-top:14px"><button class="btn pri" data-act="newlease">'+ic("plus")+'New lease</button></div></div>';
+ h+='<div class="sect"><h2>Time on each lease</h2></div>'+legend()+'<div class="grid2">'+S.leases.map(leaseCard).join("")+'</div>';
+ const ev=events(120).slice(0,6);
+ h+='<div class="sect"><h2>Coming up</h2><span class="sub">Next 120 days</span></div><div class="card">'+(ev.length?ev.map(e=>'<div class="ev"><div class="when"><b>'+D(e.d).getDate()+'</b><span>'+D(e.d).toLocaleDateString("en-GB",{month:"short"})+'</span></div><span class="tag" style="background:'+e.c+'"></span><div class="t"><b>'+esc(e.t)+'</b><span>'+esc(e.s)+'</span></div></div>').join(""):'<div class="empty"><b>Nothing due</b>Lease endings and harvests will appear here.</div>')+'</div>';
+ return h;
+}
+function leasesScreen(){
+ return '<div class="pagehead"><div><h1>Leases</h1><div class="sub">'+S.leases.length+' on your register</div></div><button class="btn pri" data-act="newlease">'+ic("plus")+'New lease</button></div>'+legend()+
+ (S.leases.length?'<div class="grid2">'+S.leases.map(leaseCard).join("")+'</div>':'<div class="card empty"><b>No leases yet</b>Add the land you hire and Furrow will track the dates, the crop and the harvest.</div>');
+}
+function detail(id){
+ const l=lease(id);if(!l)return '<div class="card empty"><b>Lease not found</b><a class="btn" href="#/leases">Back to leases</a></div>';
+ const p=predict(l),s=stats(l),cf=conflict(l,p),dl=daysLeft(l);
+ let h='<button class="back" data-go="leases">'+ic("left")+'All leases</button><div class="pagehead"><div><h1>'+esc(l.name)+'</h1><div class="sub">'+esc(l.owner)+(l.phone?" · "+esc(l.phone):"")+' · '+l.acres+' acres · '+esc(l.loc)+'</div></div>'+chipFor(l)+'</div>';
+ if(dl<0||dl<=S.remind)h+='<div class="banner'+(dl<=7?" bad":"")+'" role="alert"><div class="ic">'+ic("alert")+'</div><div><h3>'+(dl<0?"This lease has ended":"Lease ends in "+dl+" day"+(dl===1?"":"s"))+'</h3><p>'+(dl<0?"It ended on ":"It ends on ")+fmt(l.end)+'. Renew now so your crop and your place on the land are safe.</p><div class="row"><button class="btn sm pri" data-act="renew" data-id="'+l.id+'">Renew lease</button></div></div></div>';
+ h+='<div class="detail"><div>';
+ h+='<div class="card"><h3 style="font-size:19px">Lease term</h3>'+strip(l,true)+legend()+
+ '<div class="facts" style="margin-top:14px"><div><span>Agreement signed</span><b>'+fmt(l.agreed)+'</b></div><div><span>Land owner</span><b>'+esc(l.owner)+'</b></div><div><span>Lease starts</span><b>'+fmt(l.start)+'</b></div><div><span>Lease ends</span><b>'+fmt(l.end)+'</b></div><div><span>Lease paid per year</span><b>'+kes(l.rent)+'</b></div><div><span>Per acre per year</span><b>'+kes(l.rent/l.acres)+'</b></div></div>'+
+ '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn sm" data-act="renew" data-id="'+l.id+'">'+ic("refresh")+'Renew</button><button class="btn sm" data-act="editlease" data-id="'+l.id+'">Edit details</button></div></div>';
+ h+='<div style="height:14px"></div>';
+ if(p){
+  const bad=cf===2;
+  h+='<div class="predcard'+(bad?" bad":"")+'"><h3>'+(p.planted?"Predicted harvest · "+esc(l.crop):"Next harvest if you replant by "+fmtS(p.replantBy))+'</h3><div class="big">'+fmtS(p.lo)+' to '+fmt(p.hi)+'</div><p>'+(p.planted?"Planted "+fmt(l.planted)+". "+esc(l.crop)+" usually takes "+p.cycle+" days, so about "+(diff(TODAY,p.mid)>0?diff(TODAY,p.mid)+" days from now.":"it is due now."):"Field is free after the last harvest. Allowing 3 weeks to prepare and "+p.cycle+" days to grow.")+'</p>'+
+  (p.planted?'<div class="meter" aria-hidden="true"><i style="width:'+clamp(p.day/p.cycle*100,0,100)+'%"></i></div><p>Day '+p.day+' of '+p.cycle+'</p>':"")+
+  (bad?'<p style="margin-top:10px;color:#ffd9d1"><b>Heads up:</b> this is '+diff(l.end,p.mid)+' days after the lease ends on '+fmt(l.end)+'. Renew the lease or harvest early.</p>':cf===1?'<p style="margin-top:10px;color:#f6e7b0"><b>Close call:</b> a late harvest could pass the lease end.</p>':"")+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn sm gold" data-act="harvest" data-id="'+l.id+'">'+ic("wheat")+'Record harvest</button><button class="btn sm" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.4)" data-act="plant" data-id="'+l.id+'">Change crop</button></div></div>';
+ }else{
+  h+='<div class="card empty"><b>No crop on this land</b>Record what you plant and Furrow predicts the harvest.<div style="margin-top:12px"><button class="btn pri" data-act="plant" data-id="'+l.id+'">'+ic("sprout")+'Plant a crop</button></div></div>';
+ }
+ h+='</div><div><div class="tabs" role="tablist">'+["harvests","expenses","money"].map(t=>'<button role="tab" aria-selected="'+(S.tab===t)+'" data-tab="'+t+'">'+({harvests:"Harvests",expenses:"Expenses",money:"Money"})[t]+'</button>').join("")+'</div><div class="card">'+detailTab(l,s)+'</div>';
+ h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn sm" data-act="csvlease" data-id="'+l.id+'">'+ic("down")+'Statement (CSV)</button><button class="btn sm" data-act="printlease" data-id="'+l.id+'">'+ic("print")+'Print statement</button></div></div></div>';
+ return h;
+}
+function detailTab(l,s){
+ if(S.tab==="harvests"){
+  const hs=hOf(l.id).slice().reverse();
+  return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>'+hs.length+' harvest'+(hs.length===1?"":"s")+' · '+kes(s.inc)+'</b><button class="btn sm pri" data-act="harvest" data-id="'+l.id+'">'+ic("plus")+'Record</button></div>'+
+  (hs.length?hs.map(x=>'<div class="row2"><div class="l"><b>'+esc(x.crop)+' · '+x.qty+' '+esc(x.unit)+'</b><span>'+fmt(x.date)+(x.note?" · "+esc(x.note):"")+'</span></div><div class="amt" style="color:var(--gain)">+'+kes(x.income)+'</div><button class="xbtn" data-act="delh" data-id="'+x.id+'" aria-label="Delete harvest">'+ic("trash")+'</button></div>').join(""):'<div class="empty"><b>No harvests yet</b>Record each harvest and Furrow learns your seasons.</div>');
+ }
+ if(S.tab==="expenses"){
+  const es=eOf(l.id),by={};es.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
+  return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>'+es.length+' item'+(es.length===1?"":"s")+' · '+kes(s.sp)+'</b><button class="btn sm pri" data-act="expense" data-id="'+l.id+'">'+ic("plus")+'Add</button></div>'+
+  (s.sp?'<div class="stack" aria-hidden="true">'+Object.keys(by).map(c=>'<i style="width:'+by[c]/s.sp*100+'%;background:'+CATS[c]+'"></i>').join("")+'</div><div class="cats">'+Object.keys(by).map(c=>'<span><i style="background:'+CATS[c]+'"></i>'+c+' '+kes(by[c])+'</span>').join("")+'</div>':"")+
+  (es.length?es.map(e=>'<div class="row2"><span class="tag" style="background:'+CATS[e.cat]+'"></span><div class="l"><b>'+esc(e.desc||e.cat)+'</b><span>'+e.cat+' · '+fmt(e.date)+'</span></div>'+((e.receipt||e.rpath)?'<button class="xbtn" data-act="rcpt" data-id="'+e.id+'" aria-label="View receipt">'+ic("coin")+'</button>':"")+'<div class="amt">'+kes(e.amount)+'</div><button class="xbtn" data-act="dele" data-id="'+e.id+'" aria-label="Delete expense">'+ic("trash")+'</button></div>').join(""):'<div class="empty"><b>No expenses yet</b>Add seed, labour and the rest as you spend.</div>');
+ }
+ const row=(a,b,c)=>'<div class="line"><span>'+a+'</span><b'+(c?' style="color:var(--'+c+')"':"")+'>'+b+'</b></div>';
+ return '<div class="money">'+row("Harvest income","+"+kes(s.inc),"gain")+row("Expenses (itemised)","−"+kes(s.sp))+row("Lease cost to date ("+s.el+" of "+s.term+" days)","−"+kes(s.rentTo))+
+  '<div class="line tot"><span>Net so far</span><b style="color:var(--'+(s.net>=0?"gain":"loss")+')">'+(s.net<0?"−":"")+kes(Math.abs(s.net))+'</b></div></div><p class="sub">Whole lease commitment: '+kes(s.commit)+' over '+Math.round(s.term/30.4)+' months.</p>';
+}
+function reports(){
+ const rows=S.leases.map(l=>({l,s:stats(l)}));
+ const T=rows.reduce((a,r)=>({inc:a.inc+r.s.inc,sp:a.sp+r.s.sp,rent:a.rent+r.s.rentTo,net:a.net+r.s.net}),{inc:0,sp:0,rent:0,net:0});
+ let h='<div class="pagehead"><div><h1>Reports</h1><div class="sub">Download for your records, your bank or the land owner</div></div><button class="btn pri" data-act="printall">'+ic("print")+'Print or save as PDF</button></div>';
+ h+='<div class="kpis"><div class="kpi"><span>Harvest income</span><b class="pos">'+kes(T.inc)+'</b></div><div class="kpi"><span>Expenses</span><b>'+kes(T.sp)+'</b></div><div class="kpi"><span>Lease cost to date</span><b>'+kes(T.rent)+'</b></div><div class="kpi"><span>Net so far</span><b class="'+(T.net>=0?"pos":"neg")+'">'+(T.net<0?"−":"")+kes(Math.abs(T.net))+'</b></div></div>';
+ h+='<div class="detail"><div class="card"><h3 style="font-size:19px;margin-bottom:6px">Download</h3>'+
+ [["register","Lease register","Owner, dates, yearly amount, crop for every lease","csvregister"],["summary","Profit by lease","Income, expenses, lease cost and net","csvsummary"],["harvests","Harvest log","Every harvest with quantity and income","csvharvests"],["expenses","Expense log","Every expense by category","csvexpenses"],["cal","Reminders for your calendar","Lease endings and harvests as a .ics file","ics"]].map(r=>'<div class="dl"><div class="l"><b>'+r[1]+'</b><span>'+r[2]+'</span></div><button class="btn sm" data-act="'+r[3]+'" aria-label="Download '+r[1]+'">'+ic("down")+(r[3]==="ics"?".ics":"CSV")+'</button></div>').join("")+
+ '</div><div class="card"><h3 style="font-size:19px;margin-bottom:6px">Profit by lease</h3><div class="scroll"><table class="rep"><thead><tr><th>Lease</th><th class="n">Income</th><th class="n">Costs</th><th class="n">Net</th></tr></thead><tbody>'+
+ rows.map(r=>'<tr><td><b>'+esc(r.l.name)+'</b><br><span class="sub">'+esc(r.l.owner)+'</span></td><td class="n">'+kes(r.s.inc)+'</td><td class="n">'+kes(r.s.sp+r.s.rentTo)+'</td><td class="n" style="color:var(--'+(r.s.net>=0?"gain":"loss")+')">'+(r.s.net<0?"−":"")+kes(Math.abs(r.s.net))+'</td></tr>').join("")+'</tbody></table></div></div></div>';
+ return h;
+}
+
+/* ---------- sheets ---------- */
+function open(title,body){$("#shT").textContent=title;$("#shB").innerHTML=body;$("#sheet").classList.add("on");document.querySelector('#sheet [data-act=close].xbtn').innerHTML=ic("x");const f=$("#shB input,#shB select,#shB button");if(f&&matchMedia("(min-width:760px)").matches)f.focus()}
+function closeSheet(){$("#sheet").classList.remove("on")}
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2600)}
+const opts=(o,sel)=>o.map(x=>'<option'+(x===sel?" selected":"")+'>'+esc(x)+'</option>').join("");
+const fld=(label,inner,hint)=>'<label class="fld"><span>'+label+'</span>'+inner+(hint?'<small>'+hint+'</small>':"")+'</label>';
+
+function newMenu(){
+ open("Add new",'<button class="opt" data-act="newlease"><span class="ic">'+ic("plot")+'</span><span><b>New lease</b><span>Land owner, dates, yearly amount and crop</span></span></button>'+
+  '<button class="opt" data-act="pick" data-then="harvest"><span class="ic">'+ic("wheat")+'</span><span><b>Record a harvest</b><span>Quantity and income from a harvest</span></span></button>'+
+  '<button class="opt" data-act="pick" data-then="expense"><span class="ic">'+ic("coin")+'</span><span><b>Add an expense</b><span>Seed, labour, fertiliser and more, with a receipt photo</span></span></button>');
+}
+function pick(then){
+ if(!S.leases.length){toast("Add a lease first");return}
+ open("Which lease?",S.leases.map(l=>'<button class="opt" data-act="'+then+'" data-id="'+l.id+'"><span class="ic">'+ic("plot")+'</span><span><b>'+esc(l.name)+'</b><span>'+esc(l.owner)+' · '+(l.crop||"No crop")+'</span></span></button>').join(""));
+}
+function leaseForm(id){
+ const l=id?lease(id):{name:"",owner:"",phone:"",loc:"",acres:"",agreed:TODAY,start:TODAY,end:add(TODAY,365),rent:"",crop:"Maize",planted:"",cycle:0};
+ open(id?"Edit lease":"New lease",'<form data-form="lease" data-id="'+(id||"")+'" novalidate>'+
+  fld("Land owner",'<input name="owner" value="'+esc(l.owner)+'" required autocomplete="off" placeholder="Name of the person you hire from">')+
+  '<div class="two">'+fld("Date of agreement",'<input type="date" name="agreed" value="'+l.agreed+'" required>')+fld("Owner phone",'<input name="phone" inputmode="tel" value="'+esc(l.phone)+'" placeholder="Optional">')+'</div>'+
+  fld("Name of the land",'<input name="name" value="'+esc(l.name)+'" required placeholder="For example, Riverside plot">')+
+  '<div class="two">'+fld("Location",'<input name="loc" value="'+esc(l.loc)+'" placeholder="Town, county">')+fld("Acres",'<input name="acres" inputmode="decimal" value="'+esc(l.acres)+'" required placeholder="0">')+'</div>'+
+  '<div class="two">'+fld("Lease starts",'<input type="date" name="start" value="'+l.start+'" required>')+fld("Lease ends",'<input type="date" name="end" value="'+l.end+'" required>')+'</div>'+
+  '<div class="quick" style="margin:-6px 0 12px" aria-label="Set lease length"><button type="button" data-len="6">6 months</button><button type="button" data-len="12">1 year</button><button type="button" data-len="24">2 years</button><button type="button" data-len="36">3 years</button></div>'+
+  fld("Lease paid per year (KES)",'<input name="rent" inputmode="numeric" value="'+esc(l.rent)+'" required placeholder="0">')+
+  '<div class="two">'+fld("Crop planted",'<select name="crop"><option value="">None yet</option>'+opts(Object.keys(CROPS),l.crop)+'</select>')+fld("Date planted",'<input type="date" name="planted" value="'+(l.planted||"")+'">')+'</div>'+
+  fld("Days to harvest",'<input name="cycle" inputmode="numeric" value="'+(l.cycle||"")+'" placeholder="Leave blank to use the usual time">','Only change this if you know your variety or rainfall makes it shorter or longer.')+
+  '<div class="preview" id="lfp" aria-live="polite"></div><div class="err" id="lfe" style="color:var(--loss);margin-bottom:8px"></div>'+
+  '<button class="btn pri block" type="submit">'+(id?"Save changes":"Save lease")+'</button></form>');
+ lfPreview();
+}
+function lfPreview(){
+ const f=$("#shB form[data-form=lease]");if(!f)return;const v=Object.fromEntries(new FormData(f));
+ const el=$("#lfp");if(!v.start||!v.end||v.end<=v.start){el.className="preview warn";el.innerHTML="The end date must be after the start date.";return}
+ const days=diff(v.start,v.end),rent=+String(v.rent).replace(/,/g,"")||0;
+ let t='<b>'+Math.round(days/30.4)+' months</b>'+(rent?' · total lease '+kes(rent*days/365):"")+' · reminder on <b>'+fmt(add(v.end,-S.remind))+'</b>';
+ el.className="preview";
+ const c=+v.cycle>0?+v.cycle:(CROPS[v.crop]?CROPS[v.crop].days:0);
+ if(v.crop&&v.planted&&c){const m=add(v.planted,c);t+='<br>'+esc(v.crop)+' should be ready around <b>'+fmt(m)+'</b>'+(m>v.end?' — <b style="color:var(--loss)">after the lease ends</b>':"");if(m>v.end)el.className="preview warn"}
+ el.innerHTML=t;
+}
+function saveLease(f){
+ const v=Object.fromEntries(new FormData(f)),id=f.dataset.id,err=$("#lfe");
+ const num=s=>parseFloat(String(s).replace(/,/g,""));
+ if(!v.owner.trim()||!v.name.trim()){err.textContent="Add the land owner and a name for the land.";return}
+ if(!(num(v.acres)>0)){err.textContent="Enter the acres as a number.";return}
+ if(!v.start||!v.end||v.end<=v.start){err.textContent="The end date must be after the start date.";return}
+ if(!(num(v.rent)>=0)||v.rent===""){err.textContent="Enter the yearly lease amount.";return}
+ if(v.crop&&!v.planted){err.textContent="Add the date you planted "+v.crop+", or choose None yet.";return}
+ const o={name:v.name.trim(),owner:v.owner.trim(),phone:v.phone.trim(),loc:v.loc.trim(),acres:num(v.acres),agreed:v.agreed||TODAY,start:v.start,end:v.end,rent:num(v.rent),crop:v.crop,planted:v.crop?v.planted:"",cycle:parseInt(v.cycle)||0};
+ if(id)Object.assign(lease(id),o);else{o.id=uuid();S.leases.push(o)}commit('leases',lease(id||o.id));
+ closeSheet();toast(id?"Changes saved":"Lease saved");
+ if(!id)go("lease/"+o.id);else render();
+}
+function renewForm(id){
+ const l=lease(id);
+ open("Renew lease",'<p class="sub" style="margin-top:0">'+esc(l.name)+' ends on '+fmt(l.end)+'.</p><form data-form="renew" data-id="'+id+'">'+
+  fld("New end date",'<input type="date" name="end" value="'+add(l.end,365)+'" required>')+
+  '<div class="quick" style="margin:-6px 0 12px"><button type="button" data-ext="6">+6 months</button><button type="button" data-ext="12">+1 year</button><button type="button" data-ext="24">+2 years</button></div>'+
+  fld("Lease paid per year (KES)",'<input name="rent" inputmode="numeric" value="'+l.rent+'" required>','Change it if the owner has agreed a new amount.')+
+  '<button class="btn pri block" type="submit">Renew lease</button></form>');
+}
+function harvestForm(id){
+ const l=lease(id),u=(CROPS[l.crop]||{}).unit||"bags";
+ open("Record harvest",'<form data-form="harvest" data-id="'+id+'" novalidate><p class="sub" style="margin-top:0">'+esc(l.name)+'</p>'+
+  '<div class="two">'+fld("Date harvested",'<input type="date" name="date" value="'+TODAY+'" required>')+fld("Crop",'<select name="crop">'+opts(Object.keys(CROPS),l.crop||"Maize")+'</select>')+'</div>'+
+  '<div class="two">'+fld("Quantity",'<input name="qty" inputmode="decimal" required placeholder="0">')+fld("Unit",'<input name="unit" value="'+esc(u)+'">')+'</div>'+
+  fld("Income from this harvest (KES)",'<input name="income" inputmode="numeric" placeholder="0">','Leave blank if you have not sold it yet.')+
+  fld("Note",'<input name="note" placeholder="Optional">')+
+  '<label class="fld" style="display:flex;gap:10px;align-items:center"><input type="checkbox" name="done" checked style="width:22px;height:22px;min-height:0"><span style="margin:0">This was the last picking. The field is free.</span></label>'+
+  '<div class="err" id="hfe" style="color:var(--loss);margin-bottom:8px"></div><button class="btn pri block" type="submit">Save harvest</button></form>');
+}
+function expenseForm(id){
+ const l=lease(id);
+ open("Add expense",'<form data-form="expense" data-id="'+id+'" novalidate><p class="sub" style="margin-top:0">'+esc(l.name)+'</p>'+
+  '<div class="two">'+fld("Category",'<select name="cat">'+opts(Object.keys(CATS),"Seed")+'</select>')+fld("Date",'<input type="date" name="date" value="'+TODAY+'" required>')+'</div>'+
+  fld("What was it for?",'<input name="desc" placeholder="For example, DAP 50 kg">')+
+  fld("Amount (KES)",'<input name="amount" inputmode="numeric" required placeholder="0">')+
+  fld("Receipt photo",'<input type="file" name="receipt" accept="image/*" capture="environment">','Optional. Keeps the proof with the record.')+
+  '<div class="err" id="efe" style="color:var(--loss);margin-bottom:8px"></div><button class="btn pri block" type="submit">Save expense</button></form>');
+}
+function plantForm(id){
+ const l=lease(id);
+ open("Plant a crop",'<form data-form="plant" data-id="'+id+'"><p class="sub" style="margin-top:0">'+esc(l.name)+'</p>'+
+  fld("Crop",'<select name="crop">'+opts(Object.keys(CROPS),l.crop||"Maize")+'</select>')+fld("Date planted",'<input type="date" name="planted" value="'+(l.planted||TODAY)+'" required>')+
+  fld("Days to harvest",'<input name="cycle" inputmode="numeric" placeholder="Usual time for this crop">')+
+  '<button class="btn pri block" type="submit">Save and predict harvest</button></form>');
+}
+function alertsSheet(){
+ const al=alerts();
+ open("Alerts",'<div class="alist">'+(al.length?al.map(a=>'<div class="it '+a.kind+'"><div class="ic">'+ic(a.kind==="ok"?"wheat":"alert")+'</div><div style="flex:1"><b>'+esc(a.title)+'</b><span>'+esc(a.text)+'</span><div style="margin-top:6px"><button class="btn sm" data-act="'+(a.act==="renew"?"renew":a.act==="harvest"?"harvest":"open")+'" data-id="'+a.id+'">'+(a.act==="renew"?"Renew lease":a.act==="harvest"?"Record harvest":"Open lease")+'</button></div></div></div>').join(""):'<div class="empty"><b>All clear</b>No lease ends within '+S.remind+' days.</div>')+'</div>'+
+  '<div class="set"><form data-form="remind"><label class="fld" style="margin-bottom:10px"><span>Warn me before a lease ends</span><select name="d">'+[60,30,14,7].map(n=>'<option value="'+n+'"'+(S.remind===n?" selected":"")+'>'+n+' days before'+(n===30?" (recommended)":"")+'</option>').join("")+'</select></label></form>'+
+  '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="notify">'+ic("bell")+(S.notify?"Phone alerts on":"Alert my phone")+'</button><button class="btn sm" data-act="ics">'+ic("cal")+'Add to calendar</button></div></div>');
+}
+async function receipt(id){const e=S.expenses.find(x=>x.id===id);let src=e.receipt;
+ if(!src&&e.rpath){const r=await sb.storage.from("receipts").createSignedUrl(e.rpath,300);src=r.data&&r.data.signedUrl}
+ open("Receipt",'<p class="sub" style="margin-top:0">'+esc(e.desc||e.cat)+' · '+kes(e.amount)+'</p>'+(src?'<img class="rcpt" src="'+src+'" alt="Receipt photo">':'<p class="sub">This receipt is not available offline yet.</p>'))}
+
+/* ---------- downloads ---------- */
+function csv(rows){return "﻿"+rows.map(r=>r.map(c=>{c=String(c==null?"":c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c}).join(",")).join("\r\n")}
+let DL=null;
+try{if(window.claude&&claude.use)claude.use("downloads").then(d=>{DL=d||null}).catch(()=>{})}catch(e){}
+async function save(name,text,type){
+ type=type||"text/csv;charset=utf-8";
+ if(DL){try{await DL.save({filename:name,data:new Blob([text],{type})});toast("Saved "+name)}catch(e){toast("Download cancelled")}return}
+ const b=new Blob([text],{type}),u=URL.createObjectURL(b),a=document.createElement("a");
+ a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast("Downloaded "+name);
+}
+const ln=id=>(lease(id)||{}).name||"";
+function dlRegister(){save("furrow-lease-register.csv",csv([["Lease","Land owner","Owner phone","Location","Acres","Agreement date","Lease start","Lease end","Days left","Lease per year (KES)","Crop","Date planted","Predicted harvest"]].concat(S.leases.map(l=>{const p=predict(l);return[l.name,l.owner,l.phone,l.loc,l.acres,l.agreed,l.start,l.end,daysLeft(l),l.rent,l.crop,l.planted,p?p.mid:""]}))))}
+function dlSummary(){save("furrow-profit-by-lease.csv",csv([["Lease","Land owner","Harvest income","Expenses","Lease cost to date","Net"]].concat(S.leases.map(l=>{const s=stats(l);return[l.name,l.owner,s.inc,s.sp,Math.round(s.rentTo),Math.round(s.net)]}))))}
+function dlHarvests(){save("furrow-harvests.csv",csv([["Date","Lease","Crop","Quantity","Unit","Income (KES)","Note"]].concat(S.harvests.slice().sort((a,b)=>a.date<b.date?-1:1).map(h=>[h.date,ln(h.lease),h.crop,h.qty,h.unit,h.income,h.note]))))}
+function dlExpenses(){save("furrow-expenses.csv",csv([["Date","Lease","Category","Description","Amount (KES)","Has receipt"]].concat(S.expenses.slice().sort((a,b)=>a.date<b.date?-1:1).map(e=>[e.date,ln(e.lease),e.cat,e.desc,e.amount,e.receipt?"Yes":"No"]))))}
+function dlLease(id){
+ const l=lease(id),s=stats(l);
+ const r=[["Furrow lease statement"],["Lease",l.name],["Land owner",l.owner],["Term",l.start+" to "+l.end],["Lease per year (KES)",l.rent],[],["Harvests"],["Date","Crop","Quantity","Unit","Income (KES)"]];
+ hOf(id).forEach(h=>r.push([h.date,h.crop,h.qty,h.unit,h.income]));r.push([],["Expenses"],["Date","Category","Description","Amount (KES)"]);
+ eOf(id).slice().reverse().forEach(e=>r.push([e.date,e.cat,e.desc,e.amount]));
+ r.push([],["Harvest income",s.inc],["Expenses",s.sp],["Lease cost to date",Math.round(s.rentTo)],["Net so far",Math.round(s.net)]);
+ save("furrow-statement-"+l.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+".csv",csv(r));
+}
+function ics(){
+ const z=s=>s.replace(/-/g,""),ev=[];
+ const push=(d,t,desc)=>ev.push("BEGIN:VEVENT\r\nUID:"+uid()+"@furrow\r\nDTSTAMP:"+z(TODAY)+"T000000Z\r\nDTSTART;VALUE=DATE:"+z(d)+"\r\nDTEND;VALUE=DATE:"+z(add(d,1))+"\r\nSUMMARY:"+t+"\r\nDESCRIPTION:"+desc+"\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:"+t+"\r\nTRIGGER:-P1D\r\nEND:VALARM\r\nEND:VEVENT");
+ S.leases.forEach(l=>{const p=predict(l);push(add(l.end,-S.remind),"Furrow: lease ends in "+S.remind+" days ("+l.name+")","Owner: "+l.owner+". Ends "+l.end+".");push(l.end,"Furrow: lease ends ("+l.name+")","Renew with "+l.owner+".");if(p)push(p.mid,"Furrow: "+l.crop+" harvest expected ("+l.name+")","Predicted from planting date.")});
+ save("furrow-reminders.ics","BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Furrow//Lease//EN\r\n"+ev.join("\r\n")+"\r\nEND:VCALENDAR","text/calendar;charset=utf-8");
+}
+function printDoc(id){
+ const tbl=(h,rows)=>'<table><thead><tr>'+h.map((x,i)=>'<th'+(/KES|Net|Income|Costs|Qty/.test(x)?' class="n"':"")+'>'+x+'</th>').join("")+'</tr></thead><tbody>'+rows.join("")+'</tbody></table>';
+ const tr=c=>'<tr>'+c.map((x,i)=>'<td'+(typeof x==="number"||/^[−+]?KES/.test(x)?' class="n"':"")+'>'+(typeof x==="number"?x:esc(x))+'</td>').join("")+'</tr>';
+ let h='<div class="hdr"><div><h1>Furrow</h1><div>'+(id?"Lease statement":"Land lease report")+'</div></div><div style="text-align:right">Prepared '+fmt(TODAY)+'</div></div>';
+ const ls=id?[lease(id)]:S.leases;
+ h+='<h2>Leases</h2>'+tbl(["Lease","Land owner","Term","Lease per year (KES)","Crop","Net so far"],ls.map(l=>{const s=stats(l);return tr([l.name+" ("+l.acres+" acres)",l.owner,fmt(l.start)+" to "+fmt(l.end),kes(l.rent),l.crop||"—",(s.net<0?"−":"")+kes(Math.abs(s.net))])}));
+ const hs=S.harvests.filter(x=>!id||x.lease===id).sort((a,b)=>a.date<b.date?-1:1),es=S.expenses.filter(x=>!id||x.lease===id).sort((a,b)=>a.date<b.date?-1:1);
+ h+='<h2>Harvests</h2>'+tbl(["Date","Lease","Crop","Qty","Income (KES)"],hs.map(x=>tr([fmt(x.date),ln(x.lease),x.crop,x.qty+" "+x.unit,kes(x.income)])));
+ const by={};es.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
+ h+='<h2>Expenses by category</h2>'+tbl(["Category","Amount (KES)"],Object.keys(by).map(c=>tr([c,kes(by[c])])));
+ h+='<h2>Expense details</h2>'+tbl(["Date","Lease","Category","Description","Amount (KES)"],es.map(e=>tr([fmt(e.date),ln(e.lease),e.cat,e.desc,kes(e.amount)])));
+ if(DL){const css="body{font:13px/1.45 system-ui,sans-serif;margin:32px;color:#17301f}h1{font:800 26px Georgia,serif;margin:0}h2{font-size:15px;margin:18px 0 6px}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;border-bottom:2px solid #17301f;padding:5px 8px 5px 0}td{border-bottom:1px solid #ccd;padding:5px 8px 5px 0}.n{text-align:right}.hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #17301f;padding-bottom:8px;margin-bottom:10px}";save("furrow-"+(id?"lease-statement":"lease-report")+".html","<!DOCTYPE html><meta charset=utf-8><title>Furrow report</title><style>"+css+"</style>"+h+"<p style='margin-top:24px;color:#5d6f60'>Open this file and choose Print, then Save as PDF.</p>","text/html;charset=utf-8");return}
+ $("#doc").innerHTML=h;document.body.classList.add("printing");
+ const done=()=>{document.body.classList.remove("printing");removeEventListener("afterprint",done)};addEventListener("afterprint",done);
+ setTimeout(()=>{try{window.print()}catch(e){toast("Printing is not available here")}},50);
+}
+
+/* ---------- receipt photos ---------- */
+function shrink(file){
+ return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.72))};im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(file)});
+}
+
+
+/* ---------- cloud + offline data layer ---------- */
+const sb=supabase.createClient("https://fuhgjptdmvtbuaopglqg.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1aGdqcHRkbXZ0YnVhb3BnbHFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMjcwMTksImV4cCI6MjEwNjgwMzAxOX0.1AB6-ygxk83anmKmbjT42WcfimmkOAVEJ8ZiObzES18");
+const TB={leases:"leases",harvests:"lease_harvests",expenses:"lease_expenses"};
+const MAP={
+ leases:{to:r=>({id:r.id,name:r.name,owner_name:r.owner,owner_phone:r.phone||null,location:r.loc||null,acres:r.acres,agreed_on:r.agreed,lease_start:r.start,lease_end:r.end,yearly_amount:r.rent,crop:r.crop||null,planted_on:r.planted||null,cycle_days:r.cycle||null}),
+  from:r=>({id:r.id,name:r.name,owner:r.owner_name,phone:r.owner_phone||"",loc:r.location||"",acres:+r.acres,agreed:r.agreed_on,start:r.lease_start,end:r.lease_end,rent:+r.yearly_amount,crop:r.crop||"",planted:r.planted_on||"",cycle:r.cycle_days||0})},
+ harvests:{to:r=>({id:r.id,lease_id:r.lease,harvested_on:r.date,crop:r.crop,quantity:r.qty,unit:r.unit,income:r.income,note:r.note||null}),
+  from:r=>({id:r.id,lease:r.lease_id,date:r.harvested_on,crop:r.crop,qty:+r.quantity,unit:r.unit,income:+r.income,note:r.note||""})},
+ expenses:{to:r=>({id:r.id,lease_id:r.lease,category:r.cat,description:r.desc||null,amount:r.amount,spent_on:r.date,receipt_path:r.rpath||null}),
+  from:r=>({id:r.id,lease:r.lease_id,date:r.spent_on,cat:r.category,desc:r.description||"",amount:+r.amount,receipt:"",rpath:r.receipt_path||""})}
+};
+const uuid=()=>crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c=="x"?r:r&3|8).toString(16)});
+/* tiny IndexedDB key-value store */
+const kv=(()=>{let db;const open=()=>db||(db=new Promise((res,rej)=>{const q=indexedDB.open("furrow-lease",1);q.onupgradeneeded=()=>q.result.createObjectStore("kv");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}));
+ return{get:async k=>{const d=await open();return new Promise(r=>{const q=d.transaction("kv").objectStore("kv").get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(undefined)})},
+  set:async(k,v)=>{const d=await open();return new Promise(r=>{const t=d.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=()=>r()})}}})();
+const persist=()=>kv.set("snap:"+USER.id,{leases:S.leases,harvests:S.harvests,expenses:S.expenses,remind:S.remind,out:OUT});
+function commit(t,row){OUT=OUT.filter(o=>!(o.t===t&&o.id===row.id&&o.op==="up"));OUT.push({op:"up",t,id:row.id,row:JSON.parse(JSON.stringify(row))});persist();sync()}
+function drop(t,id){OUT=OUT.filter(o=>!(o.t===t&&o.id===id));OUT.push({op:"del",t,id});persist();sync()}
+function setStatus(){const t=!ONLINE?"Offline"+(OUT.length?" · "+OUT.length+" waiting":""):SYNCING?"Syncing…":OUT.length?OUT.length+" waiting":"Synced";document.querySelectorAll(".sync").forEach(e=>{e.textContent=t;e.dataset.s=!ONLINE?"off":OUT.length?"wait":"ok"})}
+async function pushOne(o){
+ if(o.op==="del"){const{error}=await sb.from(TB[o.t]).delete().eq("id",o.id);return error}
+ const row=MAP[o.t].to(o.row);
+ if(o.t==="expenses"&&o.row.receipt&&!o.row.rpath){
+  const blob=await (await fetch(o.row.receipt)).blob(),path=USER.id+"/lease-"+o.id+".jpg";
+  const up=await sb.storage.from("receipts").upload(path,blob,{contentType:"image/jpeg",upsert:true});
+  if(!up.error){row.receipt_path=path;const e=S.expenses.find(x=>x.id===o.id);if(e)e.rpath=path}
+ }
+ const{error}=await sb.from(TB[o.t]).upsert(row);return error;
+}
+async function sync(){
+ if(!USER||SYNCING||!ONLINE)return setStatus();
+ SYNCING=true;setStatus();
+ try{
+  while(OUT.length){
+   const o=OUT[0],err=await pushOne(o);
+   if(err){const net=!err.code&&/fetch|network/i.test(err.message||"");if(net){ONLINE=false;break}
+    OUT.shift();toast("One change could not be saved: "+(err.message||"error").slice(0,70))}
+   else OUT.shift();
+   persist();
+  }
+  if(!OUT.length||ONLINE){await pull()}
+ }catch(e){ONLINE=navigator.onLine&&false}
+ SYNCING=false;persist();setStatus();render();
+}
+async function pull(){
+ const pend=new Set(OUT.map(o=>o.t+":"+o.id)),gone=new Set(OUT.filter(o=>o.op==="del").map(o=>o.t+":"+o.id));
+ for(const t of Object.keys(TB)){
+  const{data,error}=await sb.from(TB[t]).select("*").limit(5000);if(error)throw error;
+  const remote=data.map(MAP[t].from).filter(r=>!pend.has(t+":"+r.id)&&!gone.has(t+":"+r.id));
+  const keep=S[t].filter(r=>OUT.some(o=>o.op==="up"&&o.t===t&&o.id===r.id));
+  const old=Object.fromEntries(S[t].map(r=>[r.id,r]));
+  remote.forEach(r=>{if(r.receipt===""&&old[r.id]&&old[r.id].receipt&&r.rpath)r.receipt=old[r.id].receipt});
+  S[t]=remote.concat(keep);
+ }
+}
+addEventListener("online",()=>{ONLINE=true;sync()});addEventListener("offline",()=>{ONLINE=false;setStatus()});
+
+/* ---------- sign-in, access switch, account ---------- */
+async function accessCheck(email){
+ try{
+  const{data,error}=await sb.from("access_flags").select("*").in("email",["*",email.toLowerCase()]);if(error)throw error;
+  const me=data.find(r=>r.email===email.toLowerCase()),all=data.find(r=>r.email==="*"),f=me||all;
+  const res=f&&f.blocked?{blocked:true,message:f.message||"Contact developer for guidance"}:{blocked:false};
+  await kv.set("access:"+email.toLowerCase(),res);return res;
+ }catch(e){return(await kv.get("access:"+email.toLowerCase()))||{blocked:false}}
+}
+function authView(msg,mode){
+ mode=mode||"in";document.querySelector(".app").classList.add("authmode");document.querySelector("#bottom").hidden=true;
+ $("#main").innerHTML='<div class="auth"><div class="authcard"><div style="display:flex;justify-content:center">'+mark(64)+'</div><h1>Furrow Leases</h1><p class="sub" style="text-align:center;margin:6px 0 18px">Every lease, harvest and shilling in one place.</p>'+
+ '<form data-form="auth" data-mode="'+mode+'" novalidate>'+fld("Email",'<input name="email" type="email" autocomplete="email" required>')+fld("Password",'<input name="password" type="password" autocomplete="'+(mode==="in"?"current-password":"new-password")+'" required minlength="6">')+
+ '<div class="err" id="ae" style="color:var(--loss);margin-bottom:8px;min-height:18px" role="alert">'+esc(msg||"")+'</div><button class="btn block" type="submit">'+(mode==="in"?"Sign in":"Create account")+'</button></form>'+
+ '<p class="sub" style="text-align:center;margin:14px 0 0">'+(mode==="in"?"New here?":"Have an account?")+' <button class="linkbtn" data-act="authmode" data-m="'+(mode==="in"?"up":"in")+'">'+(mode==="in"?"Create an account":"Sign in")+'</button></p></div></div>';
+}
+function blockedView(m){
+ document.querySelector(".app").classList.add("authmode");document.querySelector("#bottom").hidden=true;
+ $("#main").innerHTML='<div class="auth"><div class="authcard" style="text-align:center"><div style="display:flex;justify-content:center">'+mark(56)+'</div><h1>Furrow Leases</h1><p style="margin:14px 0 18px">'+esc(m)+'</p><button class="btn block" data-act="signout">Sign out</button></div></div>';
+}
+async function boot(){
+ const{data:{session}}=await sb.auth.getSession();
+ if(!session){USER=null;return authView()}
+ USER=session.user;
+ const acc=await accessCheck(USER.email||"");
+ if(acc.blocked)return blockedView(acc.message);
+ document.querySelector(".app").classList.remove("authmode");document.querySelector("#bottom").hidden=false;
+ const snap=await kv.get("snap:"+USER.id);
+ if(snap){S.leases=snap.leases||[];S.harvests=snap.harvests||[];S.expenses=snap.expenses||[];S.remind=snap.remind||30;OUT=snap.out||[]}
+ render();sync();
+}
+sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_OUT"){USER=null;S.leases=[];S.harvests=[];S.expenses=[];OUT=[];authView()}});
+function accountSheet(){
+ open("Account",'<p style="margin:0 0 4px"><b>'+esc(USER.user_metadata&&USER.user_metadata.full_name||"Signed in")+'</b></p><p class="sub" style="margin:0 0 14px">'+esc(USER.email||"")+'</p>'+
+ '<div class="set" style="margin:0 0 14px"><b class="sync" data-s="ok"></b><div class="sub">Your records are saved on this phone first and sync when you have signal.</div><button class="btn sm" style="margin-top:10px" data-act="syncnow">'+ic("refresh")+'Sync now</button></div><button class="btn block danger" data-act="signout">Sign out</button>');setStatus();
+}
+
+/* ---------- render + events ---------- */
+function render(){
+ const r=route();chrome(r);
+ const m=$("#main");
+ m.innerHTML=r.s==="lease"?detail(r.id):r.s==="leases"?leasesScreen():r.s==="reports"?reports():home();
+ window.scrollTo(0,0);
+}
+addEventListener("hashchange",()=>{closeSheet();render()});
+document.addEventListener("click",e=>{
+ const g=e.target.closest("[data-go]");if(g){go(g.dataset.go);return}
+ const tb=e.target.closest("[data-tab]");if(tb){S.tab=tb.dataset.tab;const y=scrollY;render();scrollTo(0,y);return}
+ const ln_=e.target.closest("[data-len]");if(ln_){const f=ln_.closest("form"),s=f.start.value||TODAY,d=D(s);d.setMonth(d.getMonth()+ +ln_.dataset.len);f.end.value=iso(d);lfPreview();return}
+ const ex=e.target.closest("[data-ext]");if(ex){const f=ex.closest("form"),l=lease(f.dataset.id),base=l.end>TODAY?l.end:TODAY,d=D(base);d.setMonth(d.getMonth()+ +ex.dataset.ext);f.end.value=iso(d);return}
+ const b=e.target.closest("[data-act]");if(!b)return;
+ const a=b.dataset.act,id=b.dataset.id;
+ ({close:closeSheet,account:accountSheet,syncnow:()=>{ONLINE=navigator.onLine;sync();toast('Syncing')},signout:async()=>{closeSheet();await sb.auth.signOut()},authmode:()=>authView('',b.dataset.m),newmenu:newMenu,newlease:()=>leaseForm(),editlease:()=>leaseForm(id),renew:()=>renewForm(id),harvest:()=>harvestForm(id),expense:()=>expenseForm(id),plant:()=>plantForm(id),alerts:alertsSheet,
+  pick:()=>pick(b.dataset.then),open:()=>{closeSheet();go("lease/"+id)},rcpt:()=>receipt(id),
+  delh:()=>{S.harvests=S.harvests.filter(x=>x.id!==id);drop('harvests',id);render();toast("Harvest deleted")},
+  dele:()=>{S.expenses=S.expenses.filter(x=>x.id!==id);drop('expenses',id);render();toast("Expense deleted")},
+  csvregister:dlRegister,csvsummary:dlSummary,csvharvests:dlHarvests,csvexpenses:dlExpenses,csvlease:()=>dlLease(id),ics:ics,printall:()=>printDoc(),printlease:()=>printDoc(id),
+  notify:async()=>{try{const p=await Notification.requestPermission();S.notify=p==="granted";if(S.notify){new Notification("Furrow",{body:"You will be warned "+S.remind+" days before a lease ends."});toast("Phone alerts are on")}else toast("Allow notifications in your browser settings")}catch(x){toast("In the installed app, alerts arrive on your phone")}alertsSheet()}
+ })[a]?.();
+});
+document.addEventListener("input",e=>{if(e.target.closest("form[data-form=lease]"))lfPreview()});
+document.addEventListener("change",e=>{if(e.target.closest("form[data-form=remind]")){S.remind=+e.target.value;toast("You will be warned "+S.remind+" days before");alertsSheet();chrome(route())}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+document.addEventListener("submit",async e=>{
+ const f=e.target.closest("form[data-form]");if(!f)return;e.preventDefault();
+ const k=f.dataset.form,id=f.dataset.id,v=Object.fromEntries(new FormData(f)),num=s=>parseFloat(String(s).replace(/,/g,""));
+ if(k==="auth"){const er=$("#ae");er.textContent="";const em=v.email.trim();if(!em||!v.password){er.textContent="Enter your email and password.";return}
+  const up=f.dataset.mode==="up",r=up?await sb.auth.signUp({email:em,password:v.password}):await sb.auth.signInWithPassword({email:em,password:v.password});
+  if(r.error){er.textContent=/fetch|network/i.test(r.error.message)?"No internet. Connect once to sign in.":r.error.message;return}
+  if(up&&!r.data.session){er.style.color="var(--gain)";er.textContent="Check your email to confirm your account, then sign in.";return}
+  return boot()}
+ if(k==="lease")return saveLease(f);
+ if(k==="renew"){const l=lease(id);if(v.end<=l.end&&l.end>=TODAY){toast("Pick a date after "+fmt(l.end));return}l.end=v.end;l.rent=num(v.rent)||l.rent;commit('leases',l);closeSheet();render();toast("Lease renewed to "+fmt(l.end));return}
+ if(k==="harvest"){if(!(num(v.qty)>0)){$("#hfe").textContent="Enter the quantity harvested.";return}
+  const hv={id:uuid(),lease:id,date:v.date,crop:v.crop,qty:num(v.qty),unit:v.unit||"bags",income:num(v.income)||0,note:v.note||""};S.harvests.push(hv);commit("harvests",hv);
+  const l=lease(id);if(v.done){l.planted="";commit("leases",l)}
+  closeSheet();render();const p=predict(l);toast(p&&!p.planted?"Saved. Next harvest about "+fmtS(p.mid):"Harvest saved");return}
+ if(k==="expense"){if(!(num(v.amount)>0)){$("#efe").textContent="Enter the amount spent.";return}
+  const file=f.querySelector("[name=receipt]").files[0],r=file?await shrink(file):"";
+  const ex={id:uuid(),lease:id,date:v.date,cat:v.cat,desc:v.desc||"",amount:num(v.amount),receipt:r,rpath:""};S.expenses.push(ex);commit("expenses",ex);
+  S.tab="expenses";closeSheet();render();toast("Expense saved");return}
+ if(k==="plant"){const l=lease(id);l.crop=v.crop;l.planted=v.planted;l.cycle=parseInt(v.cycle)||0;commit('leases',l);closeSheet();render();const p=predict(l);toast("Harvest predicted for about "+fmtS(p.mid));return}
+});
+boot();
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body></html>

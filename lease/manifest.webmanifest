@@ -1,0 +1,17 @@
+{
+  "name": "Furrow Leases — Land Lease Manager",
+  "short_name": "Furrow Leases",
+  "description": "Track leased land, lease end dates, harvests, expenses and reports. Works offline.",
+  "id": "/lease/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef2ea",
+  "theme_color": "#17301f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
