@@ -1,1 +1,8 @@
-{ "redirects": [ { "source": "/", "destination": "/lease/", "permanent": false } ] }
+{
+  "redirects": [
+    { "source": "/", "destination": "/lease/", "permanent": false },
+    { "source": "/app", "destination": "/lease/", "permanent": false },
+    { "source": "/app/:path*", "destination": "/lease/", "permanent": false },
+    { "source": "/downloads/furrow.apk", "destination": "/lease/", "permanent": false }
+  ]
+}
